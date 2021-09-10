@@ -1,0 +1,12 @@
+recipe fib -> int
+    prepare:
+        - int i
+        - int b
+    bake:
+        step 1:
+            serve i
+    done
+
+fibonacci fib_1.prepare(8, 8);
+
+int number = fib_1.bake()

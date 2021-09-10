@@ -1,0 +1,62 @@
+Cooking++
+
+
+
+
+
+
+values:
+unsigned int
+int
+bool
+string
+
+
+selfdeclared values:
+class/struct only 1 nessicairy
+
+
+
+
+
+functie = recipe
+
+print = taste
+return = serve
+while = mix
+
+int = liter
+float = milliliter
+string = wheat
+list = groceries
+if = weigh
+
+
+keywords:
+recipe,
+taste,
+bake,
+mix,
+cook,
+ingredient,
+flip,
+stir,
+pan,
+bowl,
+basket,
+freeze,
+fridge,
+cool,
+spatula,
+measure,
+weigh,
+pantry,
+drawer,
+serve,
+plate,
+cut,
+kneed,
+grate,
+fry,
+grill
+
