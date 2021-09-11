@@ -13,6 +13,36 @@ types = [
     "cheese"
 ]
 
+class Node:
+  def __init__(self):
+    pass
+
+
+class CodeSequence(Node):
+    pass
+
+class Function(Node):
+  def __init__(self, name):
+    super().__init__()
+    self.name = name
+    self.CodeSequence = None
+
+
+class Variable(Node):
+  def __init__(self, name):
+    super().__init__()
+    self.name = name
+
+
+
+class Program:
+    def __init__(self):
+        self.Functions = []
+        self.Variables = []
+        self.CodeSequence = None
+
+
+
 def remove_useless(list):
     if len(list) == 0:
         return []
@@ -51,7 +81,7 @@ def fixingString(list):
     elif "\\" in list[0]:
         if list[1] == '"':
             x = fixingString(list[2:])
-            return [list[0][:-2] + '"'] + x
+            return [list[0][:-1] + '"' + x[0]] + x[1:]
 
 
 def fixStrings(list):
@@ -69,7 +99,6 @@ def fixStrings(list):
 
 def tokanizer(input):
     val = subsplit(re.split("( )", input))
-    print(val)
     return fixStrings(val)
 
 def lexer():
@@ -80,33 +109,6 @@ def lexer():
 
 
 
-class Node:
-  def __init__(self):
-    pass
-
-
-class CodeSequence(Node):
-    pass
-
-class Function(Node):
-  def __init__(self, name):
-    super().__init__()
-    self.name = name
-    self.CodeSequence = None
-
-
-class Variable(Node):
-  def __init__(self, name):
-    super().__init__()
-    self.name = name
-
-
-
-class Program:
-    def __init__(self):
-        self.Functions = []
-        self.Variables = []
-        self.CodeSequence = None
 
 def defineFunction(tokens):
     new_function = Function
@@ -116,38 +118,17 @@ def defineFunction(tokens):
     new_function.name = tokens[0]
 
 
-def verifyPrint(tokens, index) -> ([], bool, str):
-    if index == 0:
-        if tokens[0] == "(":
-            return verifyPrint(tokens[1:], index+1)
-        else:
-            return tokens[1:], False, ""
-    elif index == 1:
-        if tokens[0] == '"': #or it is a variable that we can print
-            return verifyPrint(tokens[1:], index+1)
+def verifyPrint2(tokens):
+    if tokens[0] == "(" and tokens[1] == '"' and tokens[3] == '"' and tokens[4] == ')':
+        return tokens[5:], True, tokens[2]
     else:
-        if tokens[0] == "\\":
-            if tokens[1] == '"':
-                return verifyPrint(tokens[2:], index+2)
-        if tokens[0] == '"':
-            if tokens[1] == ')':
-                return (tokens, True, "")
-
-        else:
-            x, y, z = verifyPrint(tokens[1:], index+1)
-            z = tokens[0] + z
-            return (x, y, z)
-
-
-
-
-
+        return tokens[1:], False, ""
 
 
 def recursiveParse(tokens):
     if len(tokens) > 0:
         if tokens[0] == "taste":
-            tokens, good, tekst = verifyPrint(tokens[1:], 0)
+            tokens, good, tekst = verifyPrint2(tokens[1:])
             if good:
                 print(tekst)
         recursiveParse(tokens[1:])
