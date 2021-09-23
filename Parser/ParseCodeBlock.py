@@ -24,8 +24,8 @@ def do_we_know_this_variable(token, codesequence:  AST_CodeSequence, index=0):
         return False
 
 
-def parseCodeLine(tokens, last_token, delimiters: Tuple[str, ...]=(LEX_LineEnd('\n').type,)) -> ([AST_Node], [AST_Operator], [LEX_Type]):
-    if tokens[0].type in delimiters:
+def parseCodeLine(tokens, last_token, ast_main: AST_Program, delimiters: Tuple[str, ...]=('\n',)) -> ([AST_Node], [AST_Operator], [LEX_Type]):
+    if tokens[0].value in delimiters:
         return [], AST_CodeSequence, tokens
     else:
         if isinstance(tokens[0], LEX_Operator):
@@ -35,7 +35,10 @@ def parseCodeLine(tokens, last_token, delimiters: Tuple[str, ...]=(LEX_LineEnd('
             return tuple(map(operator.add, ([], [AST_AssignmentOperator()], []), parseCodeLine(tokens[1:], tokens[0])))
 
         elif isinstance(tokens[0], LEX_Identifier):
-            pass
+            if is_it_a_function(tokens[0], ast_main):
+                pass
+                #not sure how to handle this yet
+
 
         elif isinstance(tokens[0], LEX_Primitive):
             if tokens[0].subtype == "String":
@@ -122,13 +125,16 @@ def fill(values: [AST_Node], node: AST_Operator) -> AST_Operator:
         bool, filled = putValue(values[0], fill(values[1:], node))
         return filled
 
+def getNodeFromLine(tokens, last_token, ast_main: AST_Program, delimiters: Tuple[str, ...]=('\n',)) -> (AST_Operator, [LEX_Type]):
+    values, ops, rest = parseCodeLine(tokens, last_token,ast_main, delimiters)
+    op: AST_Operator = fill(values, construct(ops))
+    return op
 
 def parseArgumentList(tokens, last_token, ast_main, functionContext=None) -> (AST_ArgumentList, [LEX_Type]):
     if tokens[0].value == ')':
         return AST_ArgumentList(), tokens
     elif last_token.value == '(' or last_token.value == ',':
-        values, ops, rest = parseCodeLine(tokens, last_token, (',', ')'))
-        op: AST_Operator = fill(values, construct(ops))
+        op, rest = getNodeFromLine(tokens, last_token,ast_main, (',', ')'))
         args: AST_ArgumentList
         toks: [LEX_Type]
         args, toks = parseArgumentList(toks[1:], toks[0], ast_main, functionContext)
@@ -137,19 +143,25 @@ def parseArgumentList(tokens, last_token, ast_main, functionContext=None) -> (AS
 
 
 
-def parseWeigh(tokens, last_token, ast_main) -> AST_IfStatement:
+def parseWeigh(tokens, last_token, ast_main) -> (AST_IfStatement, [LEX_Type]):
+    return 1, 2
+
 
 
 def parseMix() -> AST_Loop:
+    pass
 
-def parseStep(tokens, last_token, ast_main) -> AST_Label:
+def parseStep(tokens: [LEX_Type], last_token: LEX_Type, ast_main) -> (AST_Label, [LEX_Type]):
     if last_token.value == "Step":
-        node: AST_Label
-        node = parseStep(tokens[2:], tokens[1], ast_main)
-        node.label_number = tokens[1]
-        return node
-
-#def parseDone(tokens, last_token, ast_main) -> AST:
+        if isinstance(tokens[0], LEX_Numerical):
+            node: AST_Label
+            node = parseStep(tokens[1:], tokens[0], ast_main)
+            node.label_number = tokens[0].value
+            return node
+    elif isinstance(last_token, LEX_Numerical):
+        if isinstance(tokens[0], LEX_Other):
+            if tokens[0].value == ":":
+                return AST_Label(), tokens
 
 def parseTaste(tokens, last_token, ast_main) -> (AST_PrintFunctionCall, [LEX_Type]):
     if last_token.value == "Taste":
@@ -158,7 +170,11 @@ def parseTaste(tokens, last_token, ast_main) -> (AST_PrintFunctionCall, [LEX_Typ
             return AST_PrintFunctionCall(args), lex_tokens
 
 
-def parseServe(tokens, last_token, ast_main) -> AST_ReturnStatement:
+def parseServe(tokens, last_token, ast_main) -> (AST_ReturnStatement, [LEX_Type]):
+    if last_token.value == "serve":
+        node: AST_ReturnStatement
+        node.value, rest = getNodeFromLine(tokens, last_token, ast_main)
+        return node, rest
 
 
 def createCodeBlock(tokens: [LEX_Type], last_token, ast_main: AST_Program) -> (AST_CodeSequence, [LEX_Type]):
@@ -173,11 +189,13 @@ def createCodeBlock(tokens: [LEX_Type], last_token, ast_main: AST_Program) -> (A
             node, rest = parseStep(tokens[1:], tokens[0], ast_main)
         elif tokens[0].value == "taste":
             node, rest = parseTaste(tokens[1:], tokens[0], ast_main)
-            
+        elif tokens[0].value == "serve":
+            node, rest = parseServe(tokens[1:], tokens[0], ast_main)
+
     else:
-        nodes, ops, rest = parseCodeLine(tokens, last_token)
-        seq: AST_CodeSequence
         rest: [LEX_Type]
+        op, rest = getNodeFromLine(tokens, last_token)
+        seq: AST_CodeSequence
         seq, rest = createCodeBlock(rest[1:], rest[0], ast_main)
-        seq.code.append(fill(nodes, construct(ops)))
+        seq.code.append(op)
         return seq, rest

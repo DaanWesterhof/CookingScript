@@ -1,5 +1,6 @@
 from Parser.Operators import *
 from Lexer.LEX_Tokens import *
+from Parser.ParseCodeBlock import *
 
 
 def getFunctionArguments(tokens, last_token) -> ([AST_FunctionArgument], [LEX_Type]):
@@ -52,8 +53,8 @@ def parseFunction(tokens, last_token, ast_main: AST_Program):
         elif tokens[0].value == "Bake":
             if last_token.type == "LineEnd":
                 if tokens[1].value == ":":
-                    code, rest_tokens, final_token = createCodeBlock(tokens[1:], tokens[0], ast_main)
                     func = AST_Function()
+                    code, rest_tokens, final_token = createCodeBlock(tokens[1:], tokens[0], ast_main)
                     func.CodeSequence = code
                     return func, rest_tokens, final_token
                 else:

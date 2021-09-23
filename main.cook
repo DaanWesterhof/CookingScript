@@ -1,7 +1,7 @@
 recipe fib -> int
     prepare:
-        - int i
-        - int b
+        - litre i
+        - litre b
     bake:
         step 1:
             serve i
@@ -10,15 +10,12 @@ recipe fib -> int
 
 taste("is this working?")
 
-fib_1 = prepare(fibonacci)(8, 8)
+fibonacci fib_1 = prepare(8, 8)
 
-int number = bake(fib_1)
+
+int number = fib_1.bake()
 
 taste("helloooo woooorld")
-
-
-
-start:
 
 
 

@@ -68,7 +68,6 @@ class AST_Loop(AST_Node):
 class AST_Label(AST_Node):
     def __init__(self):
         super().__init__("AST_Label")
-        self.CodeSequence = None
         self.label_number = None
 
 
@@ -112,7 +111,6 @@ class AST_Function(AST_Node):
 class AST_Program:
     def __init__(self):
         self.Functions: [AST_Function] = None
-        self.Variables = []
         self.CodeSequence = None
 
 
