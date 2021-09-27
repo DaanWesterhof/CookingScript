@@ -24,33 +24,74 @@ def do_we_know_this_variable(token, codesequence:  AST_CodeSequence, index=0):
         return False
 
 
+def found_identifier(tokens, last_token, ast_main):
+    if isinstance(last_token, LEX_Identifier):
+        if is_it_a_function(last_token, ast_main):
+
+        else:
+            #its either a variable, or a function call object
+            if isinstance(tokens[0], LEX_Other):
+                #its a function call object
+                return found_identifier(tokens[1:], tokens[0], ast_main)
+            else:
+                #its a vairable:
+                return AST_VariableReference(last_token)
+
+    elif isinstance(last_token, LEX_Other):
+        if isinstance(tokens[0], LEX_Keyword):
+            if tokens[0].value == "bake":
+                return found_identifier(tokens[1:], tokens[0], ast_main)
+    elif isinstance(last_token, LEX_Keyword):
+        if last_token.value == "bake":
+            if isinstance(tokens[0], LEX_Bracket):
+                if tokens[0].value == ')':
+                return found_identifier(tokens[1:], tokens[0], ast_main)
+    elif isinstance(last_token, LEX_Bracket):
+        if isinstance(tokens[0], LEX_Bracket):
+            if last_token.value == '(' and tokens[0].value == ')':
+                return AST_E
+
+
 def parseCodeLine(tokens, last_token, ast_main: AST_Program, delimiters: Tuple[str, ...]=('\n',)) -> ([AST_Node], [AST_Operator], [LEX_Type]):
     if tokens[0].value in delimiters:
         return [], AST_CodeSequence, tokens
     else:
         if isinstance(tokens[0], LEX_Operator):
-            return tuple(map(operator.add, ([], [AST_OperatorExpression(tokens[0].value)], []), parseCodeLine(tokens[1:], tokens[0])))
+            return tuple(map(operator.add, ([], [AST_OperatorExpression(tokens[0].value)], []), parseCodeLine(tokens[1:], tokens[0], ast_main)))
 
         elif isinstance(tokens[0], LEX_AssignmentOperator):
-            return tuple(map(operator.add, ([], [AST_AssignmentOperator()], []), parseCodeLine(tokens[1:], tokens[0])))
+            return tuple(map(operator.add, ([], [AST_AssignmentOperator()], []), parseCodeLine(tokens[1:], tokens[0], ast_main)))
 
         elif isinstance(tokens[0], LEX_Identifier):
             if is_it_a_function(tokens[0], ast_main):
                 pass
+            else:
+                #its either a regular variable or a function bake
+                if tokens[1].value == ".":
+                    if len(tokens > 5):
+                        if tokens[2].value == "bake":
+                            if tokens[3].value == "(" and tokens[4].value == ")":
+                                f = AST_FunctionCall()
+                                f.FunctionName = tokens[0].functionname
+                    #its a bake
+                else:
+                    #its a regular variable
+                    return tuple(map(operator.add, ([AST_VariableReference(tokens[0].value)], [], []), parseCodeLine(tokens[1:], tokens[0], ast_main)))
+
                 #not sure how to handle this yet
 
 
         elif isinstance(tokens[0], LEX_Primitive):
             if tokens[0].subtype == "String":
-                return tuple(map(operator.add, ([AST_String(tokens[0].value)], [], []), parseCodeLine(tokens[1:], tokens[0])))
+                return tuple(map(operator.add, ([AST_String(tokens[0].value)], [], []), parseCodeLine(tokens[1:], tokens[0], ast_main)))
 
             elif tokens[0].subtype == "Number":
-                return tuple(map(operator.add, ([AST_Integer(tokens[0].value)], [], []), parseCodeLine(tokens[1:], tokens[0])))
+                return tuple(map(operator.add, ([AST_Integer(tokens[0].value)], [], []), parseCodeLine(tokens[1:], tokens[0], ast_main)))
             elif tokens[0].subtype == "Bool":
                 if tokens[0].value == true_keyword:
-                    return tuple(map(operator.add, ([AST_Integer(True)], [], []), parseCodeLine(tokens[1:], tokens[0])))
+                    return tuple(map(operator.add, ([AST_Integer(True)], [], []), parseCodeLine(tokens[1:], tokens[0], ast_main)))
                 elif tokens[0].value == false_keyword:
-                    return tuple(map(operator.add, ([AST_Integer(False)], [], []), parseCodeLine(tokens[1:], tokens[0])))
+                    return tuple(map(operator.add, ([AST_Integer(False)], [], []), parseCodeLine(tokens[1:], tokens[0], ast_main)))
 
 
 #equal: left goes left in right
@@ -125,10 +166,12 @@ def fill(values: [AST_Node], node: AST_Operator) -> AST_Operator:
         bool, filled = putValue(values[0], fill(values[1:], node))
         return filled
 
+
 def getNodeFromLine(tokens, last_token, ast_main: AST_Program, delimiters: Tuple[str, ...]=('\n',)) -> (AST_Operator, [LEX_Type]):
     values, ops, rest = parseCodeLine(tokens, last_token,ast_main, delimiters)
     op: AST_Operator = fill(values, construct(ops))
     return op
+
 
 def parseArgumentList(tokens, last_token, ast_main, functionContext=None) -> (AST_ArgumentList, [LEX_Type]):
     if tokens[0].value == ')':
@@ -142,14 +185,26 @@ def parseArgumentList(tokens, last_token, ast_main, functionContext=None) -> (AS
         return args, toks
 
 
-
 def parseWeigh(tokens, last_token, ast_main) -> (AST_IfStatement, [LEX_Type]):
-    return 1, 2
+    if last_token.value == "weigh":
+        if tokens[0].value == "(":
+            cond, rest = getNodeFromLine(tokens[1:], tokens[0], ast_main, (')',))
+            codeblock, rest = createCodeBlock(tokens[2:], tokens[1], ast_main)
+            ifs = AST_IfStatement()
+            ifs.CodeSequence = codeblock
+            ifs.condition = cond
+            return ifs, rest
 
 
-
-def parseMix() -> AST_Loop:
-    pass
+def parseMix(tokens, last_token, ast_main) -> (AST_Loop, [LEX_Type]):
+    if last_token.value == "mix":
+        if tokens[0].value == "(":
+            cond, rest = getNodeFromLine(tokens[1:], tokens[0], ast_main, (')',))
+            codeblock, rest = createCodeBlock(tokens[2:], tokens[1], ast_main)
+            lop = AST_Loop()
+            lop.CodeSequence = codeblock
+            lop.condition = cond
+            return lop, rest
 
 def parseStep(tokens: [LEX_Type], last_token: LEX_Type, ast_main) -> (AST_Label, [LEX_Type]):
     if last_token.value == "Step":
@@ -163,6 +218,7 @@ def parseStep(tokens: [LEX_Type], last_token: LEX_Type, ast_main) -> (AST_Label,
             if tokens[0].value == ":":
                 return AST_Label(), tokens
 
+
 def parseTaste(tokens, last_token, ast_main) -> (AST_PrintFunctionCall, [LEX_Type]):
     if last_token.value == "Taste":
         if tokens[0].value == "(":
@@ -175,6 +231,24 @@ def parseServe(tokens, last_token, ast_main) -> (AST_ReturnStatement, [LEX_Type]
         node: AST_ReturnStatement
         node.value, rest = getNodeFromLine(tokens, last_token, ast_main)
         return node, rest
+
+def parseVariableCreation(tokens, last_token, ast_main) -> (AST_Variable, [LEX_Type]):
+    if isinstance(last_token, LEX_Types):
+        if isinstance(tokens[0], LEX_Identifier):
+            var = AST_Variable()
+            var.name = tokens[0].value
+            vals, ops, rest = parseCodeLine(tokens[1:], tokens[0], ast_main, ('\n',))
+            vals = [var] + vals
+            return fill(vals, construct(ops))
+
+
+
+
+
+def check_if_function_without_variable(token: LEX_Type, ast_main: AST_Program):
+    if isinstance(token, LEX_Identifier):
+        return is_it_a_function(token, ast_main)
+    return False
 
 
 def createCodeBlock(tokens: [LEX_Type], last_token, ast_main: AST_Program) -> (AST_CodeSequence, [LEX_Type]):
@@ -191,10 +265,13 @@ def createCodeBlock(tokens: [LEX_Type], last_token, ast_main: AST_Program) -> (A
             node, rest = parseTaste(tokens[1:], tokens[0], ast_main)
         elif tokens[0].value == "serve":
             node, rest = parseServe(tokens[1:], tokens[0], ast_main)
+    elif isinstance(tokens[0], LEX_Types):
 
+    elif check_if_function_without_variable(tokens[0], ast_main):
+        pass
     else:
         rest: [LEX_Type]
-        op, rest = getNodeFromLine(tokens, last_token)
+        op, rest = getNodeFromLine(tokens, last_token, ast_main)
         seq: AST_CodeSequence
         seq, rest = createCodeBlock(rest[1:], rest[0], ast_main)
         seq.code.append(op)

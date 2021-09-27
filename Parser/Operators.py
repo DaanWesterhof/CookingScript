@@ -17,29 +17,35 @@ class AST_Operator(AST_Node):
         elif operator_type in operators_level2:
             self.value = 2
 
+
 class AST_PlusOperator(AST_Operator):
     def __init__(self):
         super().__init__("AST_PlusOperator")
         self.value = 2
+
 
 class AST_MinusOperator(AST_Operator):
     def __init__(self):
         super().__init__("AST_MinusOperator")
         self.value = 2
 
+
 class AST_MulitplyOperator(AST_Operator):
     def __init__(self):
         super().__init__("AST_MulitplyOperator")
         self.value = 3
+
 
 class AST_DivideOperator(AST_Operator):
     def __init__(self):
         super().__init__("AST_DivideOperator")
         self.value = 3
 
+
 class AST_OperatorExpression(AST_Operator):
     def __init__(self, operator_type):
         super().__init__(operator_type)
+
 
 class AST_AssignmentOperator(AST_Operator):
     def __init__(self):
