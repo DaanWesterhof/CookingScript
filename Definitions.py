@@ -1,23 +1,30 @@
 keywordslist = [
     "recipe",
     "weigh",
+    "mix",
     "->",
     "serve",
     "taste",
     "bake",
     "prepare",
     "done",
-    "step"
+    "step",
+    "start"
 ]
 
 typeList = [
-    "liter",
-    "milliliter",
-    "eggs",
+    "litre",
+    "egg",
     "cheese"
 ]
 
-binairyOperators = [
+type_dict = {
+    "int": "liter",
+    "bool": "egg",
+    "string": "cheese"
+}
+
+RelationalOperator = [
     "<",
     ">",
     "==",
@@ -51,5 +58,5 @@ otherList = [
     '->'
 ]
 
-true_keyword = "true"
-false_keyword = "false"
+true_keyword = "whole"
+false_keyword = "broken"

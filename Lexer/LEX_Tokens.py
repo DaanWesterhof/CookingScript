@@ -27,10 +27,10 @@ class LEX_Operator(LEX_Type):
         self.type: str = "Operator"
 
 
-class LEX_BinairyOperator(LEX_Type):
+class LEX_RelationalOperator(LEX_Type):
     def __init__(self, value: str):
         super().__init__(value)
-        self.type: str = "BinairyOperator"
+        self.type: str = "RelationalOperator"
 
 
 class LEX_AssignmentOperator(LEX_Type):

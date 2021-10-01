@@ -9,12 +9,6 @@ class AST_Node(object):
         return f"Node({self.node_type})"
 
 
-class AST_Primitive(AST_Node):
-    def __init__(self, type, value):
-        super().__init__("AST_Primitive")
-        self.type = type
-        self.value = value
-
 
 class AST_ArgumentList(AST_Node):
     def __init__(self):
@@ -37,19 +31,18 @@ class AST_Variable(AST_Node):
         self.value = None
         self.type = None
 
+    def __str__(self):
+        return "Variable: " + self.name + ": " + self.type
+
 
 class AST_VariableReference(AST_Node):
     def __init__(self, variable_name):
         super().__init__("AST_VariableReference")
         self.name = variable_name
+        self.value = variable_name
 
-
-class AST_BinairyExpression(AST_Node):
-    def __init__(self):
-        super().__init__("AST_BinairyExpression")
-        self.operator = None
-        self.left_code = None
-        self.right_code = None
+    def __str__(self):
+        return "VariableReference: " + self.name
 
 
 class AST_IfStatement(AST_Node):
@@ -58,6 +51,9 @@ class AST_IfStatement(AST_Node):
         self.CodeSequence = None
         self.condition = None
 
+    def __str__(self):
+        return "IfStatement: "
+
 
 class AST_Loop(AST_Node):
     def __init__(self):
@@ -65,6 +61,7 @@ class AST_Loop(AST_Node):
         self.CodeSequence = None
         self.condition = None
 
+#todo implement in runner
 class AST_Label(AST_Node):
     def __init__(self):
         super().__init__("AST_Label")
@@ -77,7 +74,7 @@ class AST_ReturnStatement(AST_Node):
         super().__init__("AST_ReturnStatement")
         self.value = None
 
-
+#todo implement in runner
 class AST_FunctionCall(AST_Node):
     def __init__(self, ast_type: str="AST_FunctionCall"):
         super().__init__(ast_type)
@@ -110,29 +107,33 @@ class AST_Function(AST_Node):
 
 class AST_Program:
     def __init__(self):
-        self.Functions: [AST_Function] = None
-        self.CodeSequence = None
+        self.Functions: [AST_Function] = []
+        self.CodeSequence = []
 
 
 class AST_Literal(AST_Node):
-    def __init__(self, type, type_name):
+    def __init__(self, type, type_name, value):
         super().__init__(type_name)
         self.type = type
+        self.val: str = value
+
+    def __str__(self):
+        return self.type + ": " + str(self.val)
 
 
 class AST_Integer(AST_Literal):
     def __init__(self, value: int):
-        super().__init__("Integer", "AST_Integer")
+        super().__init__("Integer", "AST_Integer", str(value))
         self.value: int = value
 
 
 class AST_Bool(AST_Literal):
     def __init__(self, value: bool):
-        super().__init__("Bool", "AST_Bool")
+        super().__init__("Bool", "AST_Bool", str(bool))
         self.value: bool = value
 
 
 class AST_String(AST_Literal):
     def __init__(self, value: str):
-        super().__init__("String", "AST_String")
+        super().__init__("String", "AST_String", value)
         self.value: str = value

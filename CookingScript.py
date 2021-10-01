@@ -1,5 +1,6 @@
 from Parser.Parser import *
 from Lexer.Lexer import *
+from Runner.Runner import *
 
 
 
@@ -37,6 +38,10 @@ def verifyPrint2(tokens):
 
 
 
-token = lexer("main.cook")
-printTokens(token)
+tokens = lexer("main.cook")
+printTokens(tokens)
+ast = AST_Program()
+ast = recursiveParse(tokens, None, ast)
+context = [running_context()]
+executingCodeBlock(ast.CodeSequence, 0, context)
 #recursiveParse(token)

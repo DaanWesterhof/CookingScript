@@ -1,34 +1,21 @@
-recipe fib -> int
+recipe fib -> litre
     prepare:
         - litre i
         - litre b
     bake:
-        step 1:
-            serve i
+    done
 
-            weigh( 6 < 10 )
-
-                mix ( i < 5)
-
-
-
-                done
-            done
+start:
+    litre val = 0
+    val = 1
+    mix(val < 20)
+        weigh( val == 5)
+            taste("FIIIIIVEEEEE")
+        done
+        taste(val)
+        val = val + 1
     done
 
 
-taste("is this working?")
-
-fibonacci fib_1 = prepare(8, 8)
-
-
-int number = fib_1.bake()
-
-taste("helloooo woooorld")
-
-
-
-
-
-
-
+    taste(val * "boob ")
+done
