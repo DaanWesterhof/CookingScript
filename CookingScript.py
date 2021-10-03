@@ -43,5 +43,5 @@ printTokens(tokens)
 ast = AST_Program()
 ast = recursiveParse(tokens, None, ast)
 context = [running_context()]
-executingCodeBlock(ast.CodeSequence, 0, context)
+executingCodeBlock(ast.CodeSequence, 0, ast, context)
 #recursiveParse(token)

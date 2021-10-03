@@ -1,16 +1,36 @@
+recipe fab -> litre
+    prepare:
+        - litre i
+        - litre b
+    bake:
+        taste("boo")
+        serve i
+    done
+
+
 recipe fib -> litre
     prepare:
         - litre i
         - litre b
     bake:
+        taste(i)
+        weigh(i > 200)
+            serve i
+        done
+        fib bleb = prepare(i + 10, b)
+        serve bleb.bake()
     done
 
 start:
     litre val = 0
+    fib bla = prepare(30, 30)
+    taste(bla.bake())
     val = 1
     mix(val < 20)
         weigh( val == 5)
             taste("FIIIIIVEEEEE")
+            litre boo = 1
+            taste(boo)
         done
         taste(val)
         val = val + 1

@@ -45,7 +45,7 @@ class AST_Operator(AST_Node):
         elif self.operator == ">":
             return "LargerThenOperator" + "( " + self.left.__str__() + ", " + self.right.__str__() + " )"
         else:
-            return "Something is wrongt" + " self.operator"
+            return "Something is wrongt" + " self.operator " + self.operator
 
 
 

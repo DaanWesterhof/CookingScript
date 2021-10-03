@@ -18,6 +18,7 @@ def getFunctionArguments(tokens, last_token) -> ([AST_FunctionArgument], [LEX_Ty
 def parseFunction(tokens, last_token, ast_main: AST_Program) -> (AST_Function, [LEX_Type], LEX_Type):
     if last_token.value == "recipe":
         if tokens[0].type == "Identifier":
+            ast_main.Functions[tokens[0].value] = AST_Function()
             func, rest_tokens, final_token = parseFunction(tokens[1:], tokens[0], ast_main)
             func.name = tokens[0].value
             if func.CodeSequence is None:

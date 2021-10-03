@@ -6,13 +6,16 @@ import operator
 
 
 def is_it_a_function(token: LEX_Identifier, ast_main: AST_Program, index=0):
-    if len(ast_main.Functions) > index:
-        if token.value == ast_main.Functions[index].name:
-            return True
-        else:
-            is_it_a_function(token, ast_main, index+1)
-    else:
-        return False
+    if token in ast_main.Functions:
+        return True
+    return False
+    # if len(ast_main.Functions) > index:
+    #     if token.value == ast_main.Functions[index].name:
+    #         return True
+    #     else:
+    #         is_it_a_function(token, ast_main, index+1)
+    # else:
+    #     return False
 
 
 def do_we_know_this_variable(token, codesequence:  AST_CodeSequence, index=0):
@@ -52,7 +55,7 @@ def do_we_know_this_variable(token, codesequence:  AST_CodeSequence, index=0):
 #             if last_token.value == '(' and tokens[0].value == ')':
 #                 return AST_E
 
-
+#todo make . a operator for functions and class values?
 def parseCodeLine(tokens, last_token, ast_main: AST_Program, delimiters: Tuple[str, ...]=('\n',)) -> ([AST_Node], [AST_Operator], [LEX_Type]):
     if tokens[0].value in delimiters:
         return [], [], tokens
@@ -74,12 +77,12 @@ def parseCodeLine(tokens, last_token, ast_main: AST_Program, delimiters: Tuple[s
             else:
                 #its either a regular variable or a function bake
                 if tokens[1].value == ".":
-                    if len(tokens > 5):
+                    if len(tokens) > 5:
                         if tokens[2].value == "bake":
                             if tokens[3].value == "(" and tokens[4].value == ")":
-                                f = AST_FunctionCall()
-                                f.FunctionName = tokens[0].value
-                                return tuple(map(operator.add, (f, [], []), parseCodeLine(tokens[5:], tokens[0], ast_main, delimiters)))
+                                f = AST_FunctionCallExecution()
+                                f.name = tokens[0].value
+                                return tuple(map(operator.add, ([f], [], []), parseCodeLine(tokens[5:], tokens[0], ast_main, delimiters)))
                     #its a bake
                 else:
                     #its a regular variable
@@ -99,8 +102,16 @@ def parseCodeLine(tokens, last_token, ast_main: AST_Program, delimiters: Tuple[s
                     return tuple(map(operator.add, ([AST_Integer(True)], [], []), parseCodeLine(tokens[1:], tokens[0], ast_main, delimiters)))
                 elif tokens[0].value == false_keyword:
                     return tuple(map(operator.add, ([AST_Integer(False)], [], []), parseCodeLine(tokens[1:], tokens[0], ast_main, delimiters)))
-        else:
+        elif isinstance(tokens[0], LEX_Keyword):
+            if tokens[0].value == "prepare":
+                if tokens[1].value == "(":
+                    val, rest = parseArgumentList(tokens[2:], tokens[1], ast_main)
+                    return tuple(map(operator.add, ([val], [], []), parseCodeLine(rest, rest[0], ast_main, delimiters)))
+            else:
+                return tuple(
+                    map(operator.add, ([], [], []), (parseCodeLine(tokens[1:], tokens[0], ast_main, delimiters))))
 
+        else:
             return tuple(map(operator.add, ([], [], []), (parseCodeLine(tokens[1:], tokens[0], ast_main, delimiters))))
 
 
@@ -188,14 +199,14 @@ def getNodeFromLine(tokens, last_token, ast_main: AST_Program, delimiters: Tuple
     return op, rest
 
 
-def parseArgumentList(tokens, last_token, ast_main, functionContext=None) -> (AST_ArgumentList, [LEX_Type]):
+def parseArgumentList(tokens, last_token, ast_main) -> (AST_ArgumentList, [LEX_Type]):
     if last_token.value == ')':
         return AST_ArgumentList(), tokens
     elif last_token.value == '(' or last_token.value == ',':
         op, rest = getNodeFromLine(tokens, last_token, ast_main, (',', ')'))
         args: AST_ArgumentList
         toks: [LEX_Type]
-        args, toks = parseArgumentList(rest[1:], rest[0], ast_main, functionContext)
+        args, toks = parseArgumentList(rest[1:], rest[0], ast_main)
         args.argument_nodes.insert(0, op)
         return (args, toks)
 
@@ -259,7 +270,15 @@ def parseVariableCreation(tokens, last_token, ast_main) -> (AST_Variable, [LEX_T
             return fill(vals, construct(ops)), rest
 
 
-
+def parseFunctionVariable(tokens, last_token, ast_main) -> (AST_FunctionVariable, [LEX_Type]):
+    if last_token.value in ast_main.Functions:
+        if isinstance(tokens[0], LEX_Identifier):
+            var = AST_FunctionVariable()
+            var.name = tokens[0].value
+            var.FunctionName = last_token.value
+            vals, ops, rest = parseCodeLine(tokens[1:], tokens[0], ast_main, ('\n',))
+            vals = [var] + vals
+            return fill(vals, construct(ops)), rest
 
 
 def check_if_function_without_variable(token: LEX_Type, ast_main: AST_Program):
@@ -312,8 +331,12 @@ def createCodeBlock(tokens: [LEX_Type], last_token, ast_main: AST_Program) -> ([
         seq, rest = createCodeBlock(rest[1:], rest[0], ast_main)
         seq.insert(0, node)
         return seq, rest
-    elif check_if_function_without_variable(tokens[0], ast_main):
-        pass #todo function object variable
+    elif tokens[0].value in ast_main.Functions: #todo gotta get this to work
+        node, rest = parseFunctionVariable(tokens[1:], tokens[0], ast_main)
+        seq: [AST_Node]
+        seq, rest = createCodeBlock(rest[1:], rest[0], ast_main)
+        seq.insert(0, node)
+        return seq, rest
     elif isinstance(tokens[0], LEX_LineEnd):
         return createCodeBlock(tokens[1:], tokens[0], ast_main)
     else:

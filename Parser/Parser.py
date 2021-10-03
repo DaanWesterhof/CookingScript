@@ -10,8 +10,9 @@ def recursiveParse(tokens, last_token, ast_main: AST_Program):
     if len(tokens) > 0:
         if tokens[0].type == "Keyword":
             if tokens[0].value == "recipe":
+
                 func, toks, rest = parseFunction(tokens[1:], tokens[0], ast_main)
-                ast_main.Functions.append(func)
+                ast_main.Functions[func.name] = func
                 return recursiveParse(toks, rest, ast_main)
             elif tokens[0].value == "start":
                 if tokens[1].value == ":":

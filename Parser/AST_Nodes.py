@@ -74,15 +74,23 @@ class AST_ReturnStatement(AST_Node):
         super().__init__("AST_ReturnStatement")
         self.value = None
 
+
 #todo implement in runner
-class AST_FunctionCall(AST_Node):
-    def __init__(self, ast_type: str="AST_FunctionCall"):
+class AST_FunctionVariable(AST_Node):
+    def __init__(self, ast_type: str="AST_FunctionVariable"):
         super().__init__(ast_type)
+        self.name = None
         self.FunctionName = None
-        self.ParameterValues = []
+        self.value = []
 
 
-class AST_PrintFunctionCall(AST_FunctionCall):
+class AST_FunctionCallExecution(AST_Node):
+    def __init__(self, ast_type: str="AST_FunctionExecution"):
+        super().__init__(ast_type)
+        self.name = None
+
+
+class AST_PrintFunctionCall(AST_FunctionCallExecution):
     def __init__(self, args: AST_ArgumentList):
         super().__init__("AST_PrintFunctionCall")
         self.FunctionName = "Print"
@@ -107,7 +115,7 @@ class AST_Function(AST_Node):
 
 class AST_Program:
     def __init__(self):
-        self.Functions: [AST_Function] = []
+        self.Functions = {}
         self.CodeSequence = []
 
 
