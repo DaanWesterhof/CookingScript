@@ -18,6 +18,7 @@ class running_context():
         self.variables: AST_Node = {}
 
 
+# evaluate_condition :: AST_Node → AST_Program → [running_context] → Bool
 def evaluate_condition(node: AST_Node, ast_main: AST_Program, context: [running_context]) -> bool:
     """ Evaluate a condition that needs to result in true or false.
         It results true if the evaluation results in true or an integer bigger than 0
@@ -50,6 +51,7 @@ def evaluate_condition(node: AST_Node, ast_main: AST_Program, context: [running_
     return False
 
 
+# evaluate_argument_list :: [AST_Node] → AST_Program → [running_context] → [AST_Literal]
 def evaluate_argument_list(node_list: [AST_Node], ast_main: AST_Program, context: [running_context]) -> [AST_Literal]:
     """ Evaluate all nodes in an argument list and return a list of just AST literals
 
@@ -79,7 +81,8 @@ def evaluate_argument_list(node_list: [AST_Node], ast_main: AST_Program, context
         return [val] + evaluate_argument_list(node_list[1:], ast_main, new_context)
 
 
-#todo fix error check
+# todo fix error check
+# print_items :: [AST_Literal] → None
 def print_items(args: [AST_Literal]):
     """ This function prints the passed arguments to the terminal
 
@@ -99,6 +102,7 @@ def print_items(args: [AST_Literal]):
         print_items(args[1:])
 
 
+# executingCodeBlock :: [AST_Node] → Int → AST_Program → [running_context] → (AST_Node, [running_context])
 def executingCodeBlock(nodes: [AST_Node], index: int, ast_main: AST_Program, context: [running_context]) -> (AST_Node, [running_context]):
 
     """ This function executes the code of a code block and returns a value if a return statement is encountered
@@ -159,17 +163,40 @@ def executingCodeBlock(nodes: [AST_Node], index: int, ast_main: AST_Program, con
         return executingCodeBlock(nodes, index+1, ast_main, context)
 
 
-def find_value_in_context_list(name, context: [running_context]):
+# find_value_in_context_list :: String → [running_context] → (AST_Variable, Int)
+def find_value_in_context_list(name: str, context: [running_context]) -> Union[(AST_Variable, int), (None, int)]:
+    """ Searches for a variable in the context list
+
+        Parameters
+        ----------
+        name : str
+            The name of the variable to look for
+
+        context : list[running_context]
+            The list of context objects to search in
+
+        Returns
+        -------
+        tuple[AST_Variable, int] or tuple[None, int]
+            AST_Variable
+                If the variable has been found it will be returned
+            int
+                if the variable has been found the index of the context it was found in will be returned
+
+    """
     if len(context) == 0:
-        return None
+        return None, 0
     if name in context[-1].variables:
         return context[-1].variables[name], -1
     else:
+        val: AST_Variable
+        ind: int
         val, ind = find_value_in_context_list(name, context[:1])
         return val, ind-1
 
 
-def evaluate_add(left_node: AST_Literal, right_node: AST_Literal) -> Optional[AST_Literal]:
+# evaluate_add :: AST_Literal → AST_Literal → AST_Literal
+def evaluate_add(left_node: AST_Literal, right_node: AST_Literal) -> Union[AST_Literal, None]:
     """ Evaluate a plus operator expresion with a left and right node.
         Can only be used by strings with strings and ints with ints
 
@@ -183,8 +210,8 @@ def evaluate_add(left_node: AST_Literal, right_node: AST_Literal) -> Optional[AS
 
         Returns
         -------
-        AST_Literal
-            A literal that is the result of the sum of the left and right node
+        AST_Literal or None
+            A literal that is the result of the sum of the left and right node, None if a sum is not possible
 
     """
     if isinstance(left_node, AST_Integer) and isinstance(right_node, AST_Integer):
@@ -195,6 +222,7 @@ def evaluate_add(left_node: AST_Literal, right_node: AST_Literal) -> Optional[AS
         return None
 
 
+# evaluate_min :: AST_Integer → AST_Integer → AST_Integer
 def evaluate_min(left_node: AST_Integer, right_node: AST_Integer) -> Optional[AST_Integer]:
     """ Evaluate a minus operator expression with a left and right node.
         Can only be used with ints and ints
@@ -221,6 +249,7 @@ def evaluate_min(left_node: AST_Integer, right_node: AST_Integer) -> Optional[AS
         return None
 
 
+# evaluate_devide :: AST_Integer → AST_Integer → AST_Integer
 def evaluate_devide(left_node: AST_Integer, right_node: AST_Integer) -> Optional[AST_Integer]:
     """ Evaluate a division operator expression with a left and right node.
         Can only be used with ints and ints. Wil only return full numbers
@@ -244,6 +273,7 @@ def evaluate_devide(left_node: AST_Integer, right_node: AST_Integer) -> Optional
         return None
 
 
+# evaluate_multiply :: AST_Literal → AST_Literal → AST_Literal
 def evaluate_multiply(left_node: AST_Literal, right_node: AST_Literal) -> Optional[AST_Literal]:
     """ Evaluate a multiplication operator expression with a left and right node.
         Can only be used with ints and ints and with ints and strings.
@@ -270,6 +300,7 @@ def evaluate_multiply(left_node: AST_Literal, right_node: AST_Literal) -> Option
         return None
 
 
+# evaluate_equals :: AST_Literal → AST_Literal → AST_Bool
 def evaluate_equals(left_node: AST_Literal, right_node: AST_Literal) -> AST_Bool:
     """ Evaluate if the left and right node are equal
 
@@ -289,7 +320,8 @@ def evaluate_equals(left_node: AST_Literal, right_node: AST_Literal) -> AST_Bool
     return AST_Bool(left_node.value == right_node.value)
 
 
-def evaluate_smaller_equals(left_node: AST_Literal, right_node: AST_Literal) -> Optional[AST_Bool]:
+# evaluate_smaller_equals :: AST_Literal → AST_Literal → AST_Bool
+def evaluate_smaller_equals(left_node: AST_Literal, right_node: AST_Literal) -> Union[AST_Bool, None]:
     """ Evaluate if the left node is smaller or the same as the right node. Can only be used with ints and booleans
 
         Parameters
@@ -314,6 +346,7 @@ def evaluate_smaller_equals(left_node: AST_Literal, right_node: AST_Literal) -> 
         return None
 
 
+# evaluate_larger_equals :: AST_Literal → AST_Literal → AST_Bool
 def evaluate_larger_equals(left_node: AST_Literal, right_node: AST_Literal) -> Optional[AST_Bool]:
     """ Evaluate if the left node is larger or the same as the right node. Can only be used with ints and booleans
 
@@ -339,6 +372,7 @@ def evaluate_larger_equals(left_node: AST_Literal, right_node: AST_Literal) -> O
         return None
 
 
+# evaluate_not_equal :: AST_Literal → AST_Literal → AST_Bool
 def evaluate_not_equal(left_node: AST_Literal, right_node: AST_Literal) -> AST_Bool:
     """ Evaluate if the left and right node are not equal
 
@@ -358,6 +392,7 @@ def evaluate_not_equal(left_node: AST_Literal, right_node: AST_Literal) -> AST_B
     return AST_Bool(left_node.value != right_node.value)
 
 
+# evaluate_larger_then :: AST_Literal → AST_Literal → AST_Bool
 def evaluate_larger_then(left_node: AST_Literal, right_node: AST_Literal) -> Optional[AST_Bool]:
     """ Evaluate if the left node is larger then right node. Can only be used with ints and booleans
 
@@ -383,6 +418,7 @@ def evaluate_larger_then(left_node: AST_Literal, right_node: AST_Literal) -> Opt
         return None
 
 
+# evaluate_smaller_then :: AST_Literal → AST_Literal → AST_Bool
 def evaluate_smaller_then(left_node: AST_Literal, right_node: AST_Literal) -> Optional[AST_Bool]:
     """ Evaluate if the left node is smaller then right node. Can only be used with ints and booleans
 
@@ -408,6 +444,7 @@ def evaluate_smaller_then(left_node: AST_Literal, right_node: AST_Literal) -> Op
         return None
 
 
+# add_arguments_to_context :: [AST_Node] → [AST_Literal] → [running_context] → int → [running_context]
 def add_arguments_to_context(argument_list: [AST_Node], args: [AST_Literal], context: [running_context], index: int=0) -> [running_context]: #todo check if the variable type is correct
     """ Add parameter values to the context to act ass variables for a function
 
@@ -438,6 +475,7 @@ def add_arguments_to_context(argument_list: [AST_Node], args: [AST_Literal], con
 
 
 #todo error check for types and add functioncall support
+# evaluate_tree :: AST_Node → AST_Program → [running_context]  → (AST_Literal, [running_context])
 def evaluate_tree(tree: AST_Node, ast_main: AST_Program, context: [running_context]) -> (AST_Literal, [running_context]):
     """ This function evaluates a tree of nodes to execute its functions, assignments or other calculations.
             Even if the code has no further impact, for example: "6+6" it will still be evaluated

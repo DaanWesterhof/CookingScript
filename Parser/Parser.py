@@ -6,6 +6,7 @@ from Parser.ParseFunction import *
 import operator
 
 
+# recursiveParse :: [LEX_Type] → AST_Program → AST_Program
 def recursiveParse(tokens: [LEX_Type], ast_main: AST_Program) -> AST_Program:
     """Parsed the tokens provided into a runnable AST
 

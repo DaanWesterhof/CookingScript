@@ -3,6 +3,7 @@ from Definitions import *
 import re
 
 
+# validateForString :: String → String → Bool
 def validateForString(tokens: [str], last_token: str) -> bool:
     """ Checks if the current token is a string
 
@@ -25,7 +26,7 @@ def validateForString(tokens: [str], last_token: str) -> bool:
                 return True
     return False
 
-
+# assignTypes :: [String] → String → [LEX_Type]
 def assignTypes(tokens: [str], last_token: str=None) -> [LEX_Type]:
     """Assigns the right LEX_Type to the string and adds it to the list in the correct order
 
@@ -74,6 +75,7 @@ def assignTypes(tokens: [str], last_token: str=None) -> [LEX_Type]:
     return assignTypes(tokens[1:], tokens[0])
 
 
+# remove_useless :: [String] → [String]
 def remove_useless(tokens: [str]) -> [str]:
     """Removes unwanted strings from the list
 
@@ -96,6 +98,7 @@ def remove_useless(tokens: [str]) -> [str]:
             return [tokens[0]] + remove_useless(tokens[1:])
 
 
+# subsplit :: [String] → [String]
 def subsplit(tokens: [str]) -> [str]:
     """Splits the list of strings into even smaller strings, based on a predifined set of delimiters
             Delimiters
@@ -126,6 +129,7 @@ def subsplit(tokens: [str]) -> [str]:
 # these functions are used to fix the strings during the lexing phase
 
 
+# fixingString :: [String] → [String]
 def fixingString(tokens: [str]) -> [str]:
     """Concatinates multiple strings into 1 string untill a " is found,
         must not be called by the user. But only by fixStrings()
@@ -163,6 +167,7 @@ def fixingString(tokens: [str]) -> [str]:
             return [tokens[0][:-1] + '"' + x[0]] + x[1:]
 
 
+# fixStrings :: [String] → [String]
 def fixStrings(tokens: [str]) -> [str]:
     """Removes spaces from the list of strings unless a " is found,
         it then calls fixingString() to keep that string intact with spaces
@@ -224,8 +229,7 @@ def fix_the_strings(tokens) -> [str]:
         return []
 
 
-
-
+# tokanizer :: String → [String]
 def tokanizer(input_str: str) -> [str]:
     """Splits the given string into a list of strings,
         these strings are then split even further into smaller strings with the subsplit function
@@ -244,6 +248,7 @@ def tokanizer(input_str: str) -> [str]:
     return fixStrings(val)
 
 
+# lexer :: String → [LEX_Type]
 def lexer(file_name: str) -> [LEX_Type]:
     """Splits the contents of a file into Lexed Tokens
 

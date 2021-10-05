@@ -3,7 +3,7 @@ from Lexer.Lexer import *
 from Runner.Runner import *
 
 
-
+# printTokens :: [LEX_Type] → int → None
 def printTokens(tokens: [LEX_Type], index: int=0):
     # todo fix error check
     def print_items(args: [AST_Literal]):

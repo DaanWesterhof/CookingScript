@@ -5,6 +5,7 @@ from typing import *
 import operator
 
 
+# is_it_a_function :: LEX_Identifier → AST_Program → bool
 def is_it_a_function(token: LEX_Identifier, ast_main: AST_Program) -> bool:
     """Checks if an identifier is known as a function
 
@@ -27,6 +28,7 @@ def is_it_a_function(token: LEX_Identifier, ast_main: AST_Program) -> bool:
 
 
 #todo make . a operator for functions and class values?
+# parseCodeLine :: [LEX_Type] → LEX_Type → AST_Program → (str) → ([AST_Node], [AST_Operator], [LEX_Type])
 def parseCodeLine(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program, delimiters: Tuple[str, ...]=('\n',)) -> ([AST_Node], [AST_Operator], [LEX_Type]):
     """Parses a line of code to extract all values/nodes and operators into two lists
 
@@ -121,6 +123,7 @@ def parseCodeLine(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Progra
 #left > right: left goes left in right
 #right > left: right goes right in left
 
+# putInPlace :: AST_Operator → AST_Operator → AST_Operator
 def putInPlace(left: AST_Operator, right: AST_Operator) -> AST_Operator:
     """Parses a line of code to extract all values/nodes and operators into two lists
 
@@ -153,7 +156,7 @@ def putInPlace(left: AST_Operator, right: AST_Operator) -> AST_Operator:
             return left
 
 
-#todo it swaps stuff
+# putValue :: AST_Node → AST_Operator → (Bool, AST_Operator)
 def putValue(value: AST_Node, node: AST_Operator) -> (bool, AST_Operator):
     """Fills an operator tree with values, starting with the left most free spot.
      If the spot is taken it moves to 1 spot on the right
@@ -215,6 +218,7 @@ def putValue(value: AST_Node, node: AST_Operator) -> (bool, AST_Operator):
         return False, AST_Operator("Dummy")
 
 
+# construct :: [AST_Operator] → AST_Operator
 def construct(OperatorList: [AST_Operator]) ->AST_Operator:
     """ Puts all operators together into one tree
 
@@ -235,6 +239,7 @@ def construct(OperatorList: [AST_Operator]) ->AST_Operator:
         return putInPlace(OperatorList[0], construct(OperatorList[1:]))
 
 
+# fill :: [AST_Node] → AST_Operator → AST_Operator
 def fill(values: [AST_Node], node: AST_Operator) -> AST_Operator:
     """ Fills the operator tree with values
 
@@ -258,6 +263,7 @@ def fill(values: [AST_Node], node: AST_Operator) -> AST_Operator:
         return filled
 
 
+# getNodeFromLine :: [LEX_Type] → LEX_Type  → AST_Program → (str) → (AST_Operator, [LEX_Type])
 def getNodeFromLine(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program, delimiters: Tuple[str, ...]=('\n',)) -> (AST_Operator, [LEX_Type]):
     """ Parses a line of code and creates a runnable operator tree with the values found
 
@@ -295,7 +301,7 @@ def getNodeFromLine(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Prog
     op: AST_Operator = fill(values, construct(ops))
     return op, rest
 
-
+# parseArgumentList :: [LEX_Type] → LEX_Type  → AST_Program → (AST_ArgumentList, [LEX_Type])
 def parseArgumentList(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_ArgumentList, [LEX_Type]):
     """ Parses the arguments given to a function and creates an argument list
 
@@ -332,6 +338,7 @@ def parseArgumentList(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Pr
         return (args, toks)
 
 
+# parseWeigh :: [LEX_Type] → LEX_Type  → AST_Program → (AST_IfStatement, [LEX_Type])
 def parseWeigh(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_IfStatement, [LEX_Type]):
     """ Parses code until the done keyword to create a if statement code block
 
@@ -369,6 +376,7 @@ def parseWeigh(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) 
             return ifs, rest
 
 
+# parseMix :: [LEX_Type] → LEX_Type  → AST_Program → (AST_Loop, [LEX_Type])
 def parseMix(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_Loop, [LEX_Type]):
     """ Parses tokens until the done keyword to create a Loop code block
 
@@ -405,6 +413,8 @@ def parseMix(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) ->
             loop.condition = cond
             return loop, rest
 
+
+# parseStep :: [LEX_Type] → LEX_Type  → AST_Program → (AST_Label, [LEX_Type])
 def parseStep(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_Label, [LEX_Type]): #todo this isnt actualy implemented in the runnen
     """ Parses tokens to create a label that can be used as a goto statement
 
@@ -440,6 +450,7 @@ def parseStep(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -
                 return AST_Label(), tokens
 
 
+# parseTaste :: [LEX_Type] → LEX_Type  → AST_Program → (AST_PrintFunctionCall, [LEX_Type])
 def parseTaste(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_PrintFunctionCall, [LEX_Type]):
     """ Parses tokens to create a print function call
 
@@ -471,6 +482,7 @@ def parseTaste(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) 
             return AST_PrintFunctionCall(args), lex_tokens
 
 
+# parseServe :: [LEX_Type] → LEX_Type  → AST_Program → (AST_ReturnStatement, [LEX_Type])
 def parseServe(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_ReturnStatement, [LEX_Type]):
     """ Parses tokens to create a AST_ReturnStatement, which is used to return values from a function
 
@@ -501,6 +513,7 @@ def parseServe(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) 
         return node, rest
 
 
+# parseVariableCreation :: [LEX_Type] → LEX_Type  → AST_Program → (AST_Variable, [LEX_Type])
 def parseVariableCreation(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_Variable, [LEX_Type]):
     """ Parses tokens to create a AST_Variable, which is used to declare a variable
 
@@ -537,6 +550,7 @@ def parseVariableCreation(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AS
             return fill(vals, construct(ops)), rest
 
 
+# parseFunctionVariable :: [LEX_Type] → LEX_Type → AST_Program → (AST_FunctionVariable, [LEX_Type])
 def parseFunctionVariable(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_FunctionVariable, [LEX_Type]):
     """ Parses tokens to create a AST_FunctionVariable, which is used to declare a variable
 

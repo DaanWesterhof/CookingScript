@@ -593,6 +593,7 @@ class AST_Program:
                stringify(self.CodeSequence, index)
 
 
+# stringifyCode :: AST_Node → Int → String
 def stringifyCode(codeLine: AST_Node, index: int) -> str:
     """ Turns a codeline into a string, withc indexing for code blocks
 
@@ -612,7 +613,8 @@ def stringifyCode(codeLine: AST_Node, index: int) -> str:
     return index * "    " + codeLine.__str__(index) + "\n"
 
 
-def returnFunc(func: AST_Function, index: int=0):
+# returnFunc :: AST_Function → Int → String
+def returnFunc(func: AST_Function, index: int=0) -> str:
     """ Turns a codeline into a string, withc indexing for code blocks
 
             Parameters
@@ -630,7 +632,7 @@ def returnFunc(func: AST_Function, index: int=0):
     """
     return index * "    " + func.__str__(index+1) + "\n"
 
-
+# rec_str :: [String] → String → String
 def rec_str(string_list: [str], extra: str="") -> str:
     """ Concatonates multiple strings from a list into a single string
 
@@ -652,7 +654,7 @@ def rec_str(string_list: [str], extra: str="") -> str:
     else:
         return string_list[0].__str__() + extra + rec_str(string_list[1:], extra)
 
-
+# rec_str :: [AST_Node] → Int → String
 def stringify(values: [AST_Node], index: int) -> str:
     """ Creates a string of a list of Nodes using the stringifyCode and rec_string functions
 
