@@ -164,7 +164,7 @@ def executingCodeBlock(nodes: [AST_Node], index: int, ast_main: AST_Program, con
 
 
 # find_value_in_context_list :: String → [running_context] → (AST_Variable, Int)
-def find_value_in_context_list(name: str, context: [running_context]) -> Union[(AST_Variable, int), (None, int)]:
+def find_value_in_context_list(name: str, context: [running_context]) -> (AST_Variable, int):
     """ Searches for a variable in the context list
 
         Parameters

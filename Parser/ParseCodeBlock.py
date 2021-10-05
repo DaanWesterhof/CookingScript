@@ -587,6 +587,7 @@ def parseFunctionVariable(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AS
             return fill(vals, construct(ops)), rest
 
 
+# createCodeBlock :: [LEX_Type] → LEX_Type → AST_Program → ([AST_Node], [LEX_Type])
 def createCodeBlock(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> ([AST_Node], [LEX_Type]):
     """ Parses tokens to create a list of executable trees, that represent the code block in tree form
 

@@ -2,7 +2,7 @@ from Parser.Operators import *
 from Lexer.LEX_Tokens import *
 from Parser.ParseCodeBlock import *
 
-
+# getFunctionArguments :: [LEX_Type] → LEX_Type → ([AST_FunctionArgument], [LEX_Type])
 def getFunctionArguments(tokens : [LEX_Type], last_token : LEX_Type) -> ([AST_FunctionArgument], [LEX_Type]):
     """ Parsed lexer tokens to create a list of arguments that are expected by a function
 
@@ -35,6 +35,7 @@ def getFunctionArguments(tokens : [LEX_Type], last_token : LEX_Type) -> ([AST_Fu
                 return [AST_FunctionArgument(tokens[1].value, tokens[2].value)] + arguments, last
 
 
+# parseFunction :: [LEX_Type] → LEX_Type → AST_Program → (AST_Function, [LEX_Type], LEX_Type)
 def parseFunction(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_Function, [LEX_Type], LEX_Type):
     """ Parses tokens to create a function object after a recipe token has been found
 
