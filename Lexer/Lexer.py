@@ -4,6 +4,21 @@ import re
 
 
 def validateForString(tokens: [str], last_token: str) -> bool:
+    """ Checks if the current token is a string
+
+            Parameters
+            ----------
+            tokens : [str]
+                A list of strings
+
+            last_token : str
+                The last token that was lexed
+
+            Returns
+            -------
+            bool
+                True if the current token is a string
+    """
     if len(tokens) > 1:
         if last_token == '"':
             if tokens[1] == '"':
@@ -12,6 +27,20 @@ def validateForString(tokens: [str], last_token: str) -> bool:
 
 
 def assignTypes(tokens: [str], last_token: str=None) -> [LEX_Type]:
+    """Assigns the right LEX_Type to the string and adds it to the list in the correct order
+
+            Parameters
+            ----------
+            tokens : [str]
+                A list of strings
+            last_token : str, optional
+                The last token that was assigned a type
+
+            Returns
+            -------
+            list
+                A list of tokens with the right types
+        """
     if len(tokens) == 0:
         return []
     if validateForString(tokens, last_token):
@@ -46,6 +75,18 @@ def assignTypes(tokens: [str], last_token: str=None) -> [LEX_Type]:
 
 
 def remove_useless(tokens: [str]) -> [str]:
+    """Removes unwanted strings from the list
+
+            Parameters
+            ----------
+            tokens : [str]
+                A list of strings
+
+            Returns
+            -------
+            list
+                A list of strings
+    """
     if len(tokens) == 0:
         return []
     else:
@@ -56,6 +97,21 @@ def remove_useless(tokens: [str]) -> [str]:
 
 
 def subsplit(tokens: [str]) -> [str]:
+    """Splits the list of strings into even smaller strings, based on a predifined set of delimiters
+            Delimiters
+            ----------
+            [\n:.,()+-/*"]
+
+            Parameters
+            ----------
+            tokens : [str]
+                A list of strings
+
+            Returns
+            -------
+            list
+                A list of strings
+    """
     if len(tokens) == 1:
         if tokens[0] == "->":
             return remove_useless([tokens[0]] + subsplit(tokens[1:]))
@@ -71,6 +127,19 @@ def subsplit(tokens: [str]) -> [str]:
 
 
 def fixingString(tokens: [str]) -> [str]:
+    """Concatinates multiple strings into 1 string untill a " is found,
+        must not be called by the user. But only by fixStrings()
+
+            Parameters
+            ----------
+            tokens : [str]
+                A list of strings
+
+            Returns
+            -------
+            list
+                A list of strings
+    """
     if len(tokens) == 0:
         return []
     if tokens[0] != '"' and '\\' not in tokens[0]:
@@ -95,6 +164,19 @@ def fixingString(tokens: [str]) -> [str]:
 
 
 def fixStrings(tokens: [str]) -> [str]:
+    """Removes spaces from the list of strings unless a " is found,
+        it then calls fixingString() to keep that string intact with spaces
+
+            Parameters
+            ----------
+            tokens : [str]
+                A list of strings
+
+            Returns
+            -------
+            list
+                A list of strings
+    """
     if len(tokens) > 0:
         if tokens[0] == '"':
             return [tokens[0]] + fixingString(tokens[1:])
@@ -107,6 +189,9 @@ def fixStrings(tokens: [str]) -> [str]:
 
 # these are the head tokanizer/lexer funtions, might put them together
 
+
+
+#todo fix this guz its nicer
 def add_escaped_char(tokens):
     if len(tokens) > 1:
         return tokens[0], tokens[0]
@@ -142,11 +227,36 @@ def fix_the_strings(tokens) -> [str]:
 
 
 def tokanizer(input_str: str) -> [str]:
+    """Splits the given string into a list of strings,
+        these strings are then split even further into smaller strings with the subsplit function
+
+            Parameters
+            ----------
+            input_str : str
+                A string
+
+            Returns
+            -------
+            list
+                A list of strings
+    """
     val = subsplit(re.split("( )", input_str))
     return fixStrings(val)
 
 
 def lexer(file_name: str) -> [LEX_Type]:
+    """Splits the contents of a file into Lexed Tokens
+
+            Parameters
+            ----------
+            file_name : str
+                The name of the file to Lex
+
+            Returns
+            -------
+            list
+                A list of Lexer Tokens
+    """
     f = open(file_name, "r")
     tokens = tokanizer(f.read())
     tokens = assignTypes(tokens)

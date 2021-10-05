@@ -2,7 +2,33 @@ from Definitions import *
 from Parser.AST_Nodes import *
 
 class AST_Operator(AST_Node):
-    def __init__(self, operator_type: str):
+    """ A class for operator expressions
+
+        Attributes
+        ----------
+        left : AST_Node
+            The AST node on the left of the operator
+
+        right : AST_Node
+            The AST node on the right of the operator
+
+        operator : str
+            The operator in string form for example: "+
+
+        value : int
+            The higher the number the higher its priority in a calculation for example:
+                multiply has value 3 while plus has value 2 so multiply is evaluated before the plus
+    """
+    def __init__(self, operator_type: str = "Dummy"):
+        """ Initialize the object and set its operator and type
+
+            Parameters
+            ----------
+            operator_type : str, optional
+                The operator_type determines what kind of calculation this operator wil do.
+                The default value is Dummy to create a dummy operator that does nothing
+
+        """
         if operator_type == "Dummy":
             super().__init__("Dummy")
         elif operator_type in RelationalOperator:
@@ -13,7 +39,7 @@ class AST_Operator(AST_Node):
         self.left: AST_Node = None
         self.right: AST_Node = None
         self.operator: str = operator_type
-        self.value = 0
+        self.value: int = 0
         if operator_type in RelationalOperator:
             self.value = 1
         if operator_type in operators_level1:
@@ -21,7 +47,19 @@ class AST_Operator(AST_Node):
         elif operator_type in operators_level2:
             self.value = 3
 
-    def __str__(self) -> str:
+    def __str__(self, index=0) -> str:
+        """ Returns a string version of the object and je subnodes of the object
+
+                Parameters
+                ----------
+                index : int
+                    Integer value indicating the tree depth of the code block the node resides in
+
+                Returns
+                -------
+                str
+                    A string version of the object and its subnodes
+        """
         if self.operator == "+":
             return "PlusOperator" + "( " + self.left.__str__() + ", " + self.right.__str__() + " )"
         elif self.operator == "-":
@@ -45,47 +83,42 @@ class AST_Operator(AST_Node):
         elif self.operator == ">":
             return "LargerThenOperator" + "( " + self.left.__str__() + ", " + self.right.__str__() + " )"
         else:
-            return "Something is wrongt" + " self.operator " + self.operator
+            return self.operator
 
-
-
-
-
-class AST_PlusOperator(AST_Operator):
-    def __init__(self):
-        super().__init__("AST_PlusOperator")
-        self.value = 2
-
-
-class AST_MinusOperator(AST_Operator):
-    def __init__(self):
-        super().__init__("AST_MinusOperator")
-        self.value = 2
-
-
-class AST_MulitplyOperator(AST_Operator):
-    def __init__(self):
-        super().__init__("AST_MulitplyOperator")
-        self.value = 3
-
-
-class AST_DivideOperator(AST_Operator):
-    def __init__(self):
-        super().__init__("AST_DivideOperator")
-        self.value = 3
 
 
 class AST_OperatorExpression(AST_Operator):
-    def __init__(self, operator_type):
+    """ A class to identify OperatorExpressions
+    """
+    def __init__(self, operator_type: str):
+        """ Initialize the object and sets the type using the innit of its superclass
+
+                Parameters
+                ----------
+                operator_type : str
+                    The string version of the desired operator. for exapmple: "+" or "*"
+        """
+
         super().__init__(operator_type)
 
 
 class AST_AssignmentOperator(AST_Operator):
+    """ A class to identify AssignmentOperators
+    """
     def __init__(self):
+        """Initialize the object and sets the type using the innit of its superclass"""
         super().__init__("=")
 
 
 class AST_RelationalOperators(AST_Operator):
-    def __init__(self, operator_type):
+    """ A class to identify RelationalOperators
+    """
+    def __init__(self, operator_type: str):
+        """ Initialize the object and sets the type using the innit of its superclass
+
+                Parameters
+                ----------
+                operator_type : str
+                    The string version of the desired operator. for exapmple: "<" or "=="
+        """
         super().__init__(operator_type)
-        self.operator = operator_type
