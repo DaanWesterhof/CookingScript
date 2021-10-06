@@ -9,13 +9,15 @@ keywordslist = [
     "prepare",
     "done",
     "step",
-    "start"
+    "start",
+    "cookbook"
 ]
 
 typeList = [
     "litre",
     "egg",
-    "cheese"
+    "cheese",
+    "groceries"
 ]
 
 type_dict = {
@@ -55,7 +57,11 @@ otherList = [
     '"',
     ',',
     '.',
-    '->'
+    '->',
+    '[',
+    ']',
+    '{',
+    '}'
 ]
 
 true_keyword = "whole"

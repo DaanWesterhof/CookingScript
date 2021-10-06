@@ -62,7 +62,7 @@ def assignTypes(tokens: [str], last_token: str=None) -> [LEX_Type]:
         return [LEX_Bracket(tokens[0])] + assignTypes(tokens[1:], tokens[0])
     elif tokens[0] in RelationalOperator:
         return [LEX_RelationalOperator(tokens[0])] + assignTypes(tokens[1:], tokens[0])
-    elif tokens[0] in [':', ',', '.', '->']:
+    elif tokens[0] in [':', ',', '.', '->', '[', ']', '{', '}']:
         return [LEX_Other(tokens[0])] + assignTypes(tokens[1:], tokens[0])
     elif tokens[0] == '\n':
         return [LEX_LineEnd(tokens[0])] + assignTypes(tokens[1:], tokens[0])
@@ -70,7 +70,7 @@ def assignTypes(tokens: [str], last_token: str=None) -> [LEX_Type]:
         return [LEX_Numerical(tokens[0])] + assignTypes(tokens[1:], tokens[0])
     elif tokens[0] == true_keyword or tokens[0] == false_keyword:
         return [LEX_Bool(tokens[0])] + assignTypes(tokens[1:], tokens[0])
-    elif tokens[0].isalnum():
+    elif tokens[0].isalnum() or (tokens[0][0] == '$' and tokens[0][1:].isalnum()):
         return [LEX_Identifier(tokens[0])] + assignTypes(tokens[1:], tokens[0])
     return assignTypes(tokens[1:], tokens[0])
 
@@ -119,12 +119,12 @@ def subsplit(tokens: [str]) -> [str]:
         if tokens[0] == "->":
             return remove_useless([tokens[0]] + subsplit(tokens[1:]))
         else:
-            return remove_useless(re.split('([\n:.,()+-/*"])', tokens[0]))
+            return remove_useless(re.split('([\[\]\n:.,()+-/*"{}])', tokens[0]))
     else:
         if tokens[0] == "->":
             return remove_useless([tokens[0]] + subsplit(tokens[1:]))
         else:
-            return remove_useless(re.split('([\n:.,()+-/*"])', tokens[0]) + subsplit(tokens[1:]))
+            return remove_useless(re.split('([\[\]\n:.,()+-/*"{}])', tokens[0]) + subsplit(tokens[1:]))
 
 # these functions are used to fix the strings during the lexing phase
 

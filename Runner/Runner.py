@@ -81,29 +81,53 @@ def evaluate_argument_list(node_list: [AST_Node], ast_main: AST_Program, context
         return [val] + evaluate_argument_list(node_list[1:], ast_main, new_context)
 
 
+
+def print_list(args: AST_List, index: int=0):
+    if args.length == 0:
+        print("[]", end="")
+    if args.length == 1:
+        print("[ "+ args.value[0].val + " ]", end="")
+    elif index == args.length-1:
+        print(args.value[index].val + " ]", end="")
+    elif index == 0:
+        print("[ " + args.value[0].val +', ', end="")
+        print_list(args, index+1)
+    else:
+        print(args.value[index].val +', ', end="")
+        print_list(args, index+1)
+
 # todo fix error check
 # print_items :: [AST_Literal] → None
-def print_items(args: [AST_Literal]):
+def print_items(args: List[AST_Node]):
     """ This function prints the passed arguments to the terminal
 
         Parameters
         ----------
-        args: [AST_Literal]
-            This is a list of literals that need to be printed to the terminal
+        args: [AST_Node]
+            This is a list of values that need to be printed to the terminal
 
     """
     if len(args) == 0:
         print("expexted parameter in serve()")
         exit()
     elif len(args) == 1:
-        print(args[0].value)
+        if isinstance(args[0], AST_List):
+            print_list(args[0])
+            print()
+        else:
+            print(args[0].value)
     else:
-        print(args[0].value, end=' ')
-        print_items(args[1:])
+        if isinstance(args[0], AST_List):
+            print_list(args[0])
+            print(' ', end="")
+            print_items(args[1:])
+        else:
+            print(args[0].value, end=' ')
+            print_items(args[1:])
 
 
 # executingCodeBlock :: [AST_Node] → Int → AST_Program → [running_context] → (AST_Node, [running_context])
-def executingCodeBlock(nodes: [AST_Node], index: int, ast_main: AST_Program, context: [running_context]) -> (AST_Node, [running_context]):
+def executingCodeBlock(nodes: List[AST_Node], index: int, ast_main: AST_Program, context: List[running_context]) -> (AST_Node, List[running_context]):
 
     """ This function executes the code of a code block and returns a value if a return statement is encountered
 
@@ -164,7 +188,7 @@ def executingCodeBlock(nodes: [AST_Node], index: int, ast_main: AST_Program, con
 
 
 # find_value_in_context_list :: String → [running_context] → (AST_Variable, Int)
-def find_value_in_context_list(name: str, context: [running_context]) -> (AST_Variable, int):
+def find_value_in_context_list(name: str, context: List[running_context]) -> (AST_Variable, int):
     """ Searches for a variable in the context list
 
         Parameters
@@ -223,7 +247,7 @@ def evaluate_add(left_node: AST_Literal, right_node: AST_Literal) -> Union[AST_L
 
 
 # evaluate_min :: AST_Integer → AST_Integer → AST_Integer
-def evaluate_min(left_node: AST_Integer, right_node: AST_Integer) -> Optional[AST_Integer]:
+def evaluate_min(left_node: AST_Integer, right_node: AST_Integer) -> AST_Integer:
     """ Evaluate a minus operator expression with a left and right node.
         Can only be used with ints and ints
 
@@ -250,7 +274,7 @@ def evaluate_min(left_node: AST_Integer, right_node: AST_Integer) -> Optional[AS
 
 
 # evaluate_devide :: AST_Integer → AST_Integer → AST_Integer
-def evaluate_devide(left_node: AST_Integer, right_node: AST_Integer) -> Optional[AST_Integer]:
+def evaluate_devide(left_node: AST_Integer, right_node: AST_Integer) -> AST_Integer:
     """ Evaluate a division operator expression with a left and right node.
         Can only be used with ints and ints. Wil only return full numbers
 
@@ -300,6 +324,18 @@ def evaluate_multiply(left_node: AST_Literal, right_node: AST_Literal) -> Option
         return None
 
 
+def smart_equals(f: Callable) -> AST_Bool:
+    def inner(a: AST_Literal, b: AST_Literal) -> AST_Bool:
+        if ((type(a) is type(b)) and (
+                isinstance(a, AST_Bool) or isinstance(b, AST_Integer))) or (
+                isinstance(a, AST_Bool) and isinstance(b, AST_Integer)) or (
+                isinstance(a, AST_Integer) and isinstance(b, AST_Bool)):
+            return f(a, b)
+        else:
+            return None
+    return inner
+
+
 # evaluate_equals :: AST_Literal → AST_Literal → AST_Bool
 def evaluate_equals(left_node: AST_Literal, right_node: AST_Literal) -> AST_Bool:
     """ Evaluate if the left and right node are equal
@@ -321,7 +357,8 @@ def evaluate_equals(left_node: AST_Literal, right_node: AST_Literal) -> AST_Bool
 
 
 # evaluate_smaller_equals :: AST_Literal → AST_Literal → AST_Bool
-def evaluate_smaller_equals(left_node: AST_Literal, right_node: AST_Literal) -> Union[AST_Bool, None]:
+@smart_equals
+def evaluate_smaller_equals(left_node: AST_Literal, right_node: AST_Literal) -> AST_Bool:
     """ Evaluate if the left node is smaller or the same as the right node. Can only be used with ints and booleans
 
         Parameters
@@ -337,17 +374,12 @@ def evaluate_smaller_equals(left_node: AST_Literal, right_node: AST_Literal) -> 
         AST_Bool
             A AST_Bool object with the value true if the left node was smaller or equal to the right node
     """
-    if ((type(left_node) is type(right_node)) and (
-            isinstance(left_node, AST_Bool) or isinstance(left_node, AST_Integer))) or (
-            isinstance(left_node, AST_Bool) and isinstance(right_node, AST_Integer)) or (
-            isinstance(left_node, AST_Integer) and isinstance(right_node, AST_Bool)):
-        return AST_Bool(left_node <= right_node)
-    else:
-        return None
+    AST_Bool(left_node <= right_node)
 
 
 # evaluate_larger_equals :: AST_Literal → AST_Literal → AST_Bool
-def evaluate_larger_equals(left_node: AST_Literal, right_node: AST_Literal) -> Optional[AST_Bool]:
+@smart_equals
+def evaluate_larger_equals(left_node: AST_Literal, right_node: AST_Literal) -> AST_Bool:
     """ Evaluate if the left node is larger or the same as the right node. Can only be used with ints and booleans
 
         Parameters
@@ -363,13 +395,7 @@ def evaluate_larger_equals(left_node: AST_Literal, right_node: AST_Literal) -> O
         AST_Bool
             A AST_Bool object with the value true if the left node was larger or equal to the right node
     """
-    if ((type(left_node) is type(right_node)) and (
-            isinstance(left_node, AST_Bool) or isinstance(left_node, AST_Integer))) or (
-            isinstance(left_node, AST_Bool) and isinstance(right_node, AST_Integer)) or (
-            isinstance(left_node, AST_Integer) and isinstance(right_node, AST_Bool)):
-        return AST_Bool(left_node >= right_node)
-    else:
-        return None
+    return AST_Bool(left_node >= right_node)
 
 
 # evaluate_not_equal :: AST_Literal → AST_Literal → AST_Bool
@@ -393,7 +419,8 @@ def evaluate_not_equal(left_node: AST_Literal, right_node: AST_Literal) -> AST_B
 
 
 # evaluate_larger_then :: AST_Literal → AST_Literal → AST_Bool
-def evaluate_larger_then(left_node: AST_Literal, right_node: AST_Literal) -> Optional[AST_Bool]:
+@smart_equals
+def evaluate_larger_then(left_node: AST_Literal, right_node: AST_Literal) -> AST_Bool:
     """ Evaluate if the left node is larger then right node. Can only be used with ints and booleans
 
         Parameters
@@ -409,16 +436,11 @@ def evaluate_larger_then(left_node: AST_Literal, right_node: AST_Literal) -> Opt
         AST_Bool
             A AST_Bool object with the value true if the left node is larger then right node
     """
-    if ((type(left_node) is type(right_node)) and (
-            isinstance(left_node, AST_Bool) or isinstance(left_node, AST_Integer))) or (
-            isinstance(left_node, AST_Bool) and isinstance(right_node, AST_Integer)) or (
-            isinstance(left_node, AST_Integer) and isinstance(right_node, AST_Bool)):
-        return AST_Bool(left_node.value > right_node.value)
-    else:
-        return None
+    return AST_Bool(left_node.value > right_node.value)
 
 
 # evaluate_smaller_then :: AST_Literal → AST_Literal → AST_Bool
+@smart_equals
 def evaluate_smaller_then(left_node: AST_Literal, right_node: AST_Literal) -> Optional[AST_Bool]:
     """ Evaluate if the left node is smaller then right node. Can only be used with ints and booleans
 
@@ -435,13 +457,7 @@ def evaluate_smaller_then(left_node: AST_Literal, right_node: AST_Literal) -> Op
         AST_Bool
             A AST_Bool object with the value true if the left node is smaller then right node
     """
-    if ((type(left_node) is type(right_node)) and (
-            isinstance(left_node, AST_Bool) or isinstance(left_node, AST_Integer))) or (
-            isinstance(left_node, AST_Bool) and isinstance(right_node, AST_Integer)) or (
-            isinstance(left_node, AST_Integer) and isinstance(right_node, AST_Bool)):
-        return AST_Bool(left_node.value < right_node.value)
-    else:
-        return None
+    return AST_Bool(left_node.value < right_node.value)
 
 
 # add_arguments_to_context :: [AST_Node] → [AST_Literal] → [running_context] → int → [running_context]
@@ -475,8 +491,8 @@ def add_arguments_to_context(argument_list: [AST_Node], args: [AST_Literal], con
 
 
 #todo error check for types and add functioncall support
-# evaluate_tree :: AST_Node → AST_Program → [running_context]  → (AST_Literal, [running_context])
-def evaluate_tree(tree: AST_Node, ast_main: AST_Program, context: [running_context]) -> (AST_Literal, [running_context]):
+# evaluate_tree :: AST_Node → AST_Program → [running_context]  → (AST_Node, [running_context])
+def evaluate_tree(tree: AST_Node, ast_main: AST_Program, context: [running_context]) -> (AST_Node, [running_context]):
     """ This function evaluates a tree of nodes to execute its functions, assignments or other calculations.
             Even if the code has no further impact, for example: "6+6" it will still be evaluated
 
@@ -502,34 +518,79 @@ def evaluate_tree(tree: AST_Node, ast_main: AST_Program, context: [running_conte
     if isinstance(tree, AST_Literal):
         return tree, context
     elif isinstance(tree, AST_VariableReference):
-        var, index = find_value_in_context_list(tree.name, context)
-        if var is not None:
-            return var.value, context
+        if isinstance(tree, AST_ListAcces):
+            var: AST_List
+            var, index = find_value_in_context_list(tree.name, context)
+            if var is not None:
+                return var.value[evaluate_tree(tree.node, ast_main, context)[0].value], context
+
+        else:
+            var, index = find_value_in_context_list(tree.name, context)
+            if var is not None:
+                if isinstance(var, AST_List):
+                    return var, context
+                else:
+                    return var.value, context
+
     elif isinstance(tree, AST_FunctionCallExecution):
         val, ind = find_value_in_context_list(tree.name, context)
         new_context = [running_context()]
         if len(ast_main.Functions[val.FunctionName].argumentList) == len(val.value.argument_nodes):
             arg_list = evaluate_argument_list(val.value.argument_nodes, ast_main, context)
             new_context = add_arguments_to_context(ast_main.Functions[val.FunctionName].argumentList, arg_list, new_context)
+
         else:
             #todo throw error
             print("the amount of passed arguments is not the same as the expected amount")
             exit()
+
         val, bad_context = executingCodeBlock(ast_main.Functions[val.FunctionName].CodeSequence, 0, ast_main, new_context)
         return val, context
+
     elif isinstance(tree, AST_AssignmentOperator):
         if isinstance(tree.left, AST_Variable):
             val, context = evaluate_tree(tree.right, ast_main, context)
-            tree.left.value = val
+            if isinstance(tree.left, AST_List):
+                if isinstance(val, AST_ArgumentList):
+                    tree.left.value = evaluate_argument_list(val.argument_nodes, ast_main, context)
+                    tree.left.length = len(tree.left.value)
+                elif isinstance(val, AST_Integer):
+                    tree.left.length = val.value
+                    tree.left.value = [AST_Integer(0)] * val.value
+
+            else:
+                tree.left.value = val
             context[-1].variables[tree.left.name] = tree.left
             return None, context
-        elif isinstance(tree.left, AST_VariableReference):
-            val, context = evaluate_tree(tree.right, ast_main, context)
-            var, ind = find_value_in_context_list(tree.left.name, context)
-            var.value = val
 
-            context[ind].variables[tree.left.name] = var
+        elif isinstance(tree.left, AST_VariableReference):
+            if isinstance(tree.left, AST_ListAcces):
+                var: AST_List
+                var, index = find_value_in_context_list(tree.left.name, context)
+                val, context = evaluate_tree(tree.right, ast_main, context)
+
+                var.value[evaluate_tree(tree.left.node, ast_main, context)[0].value] = val
+                context[index].variables[tree.left.name] = var
+
+            else:
+                val, context = evaluate_tree(tree.right, ast_main, context)
+                var, ind = find_value_in_context_list(tree.left.name, context)
+                if isinstance(var, AST_List):
+                    if isinstance(val, AST_ArgumentList):
+                        if len(val.argument_nodes) == var.length:
+                            var.value = evaluate_argument_list(val.argument_nodes, ast_main, context)
+                        else:
+                            pass  # throw error not same length
+                    elif isinstance(val, AST_Integer):
+                        var.length = val.value
+                        var.value = [AST_Integer(0)] * val.value
+                    else:
+                        pass  # throw error cant assign regular value to argument list, use []
+                else:
+                    var.value = val
+                context[ind].variables[tree.left.name] = var
             return None, context
+
         elif isinstance(tree.left, AST_FunctionVariable):
             val, context = evaluate_tree(tree.right, ast_main, context)
             tree.left.value = val

@@ -1,3 +1,5 @@
+cookbook "second.cook"
+
 recipe fab -> litre
     prepare:
         - litre i
@@ -25,7 +27,14 @@ start:
     litre val = 0
     fib bla = prepare(30, 30)
     taste(bla.bake())
-    val = 1
+    groceries lijst = 600
+    taste(lijst[0])
+    taste(lijst)
+    lijst[3] = "hey"
+    weigh( lijst[0] == 1)
+        taste("ITS WOORKING")
+    done
+    taste(lijst)
     mix(val < 20)
         weigh( val == 5)
             taste("FIIIIIVEEEEE")
@@ -35,7 +44,5 @@ start:
         taste(val)
         val = val + 1
     done
-
-
     taste(val * "boob ")
 done

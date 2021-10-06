@@ -1,6 +1,8 @@
 from Definitions import *
 import operator
 import functools
+from functools import reduce
+from typing import List
 
 
 
@@ -66,7 +68,7 @@ class AST_ArgumentList(AST_Node):
                 str
                     A string version of the object and its subnodes
         """
-        return "ArgumentList(" + rec_str(self.argument_nodes, ", ") + ")"
+        return "ArgumentList(" + reduce(lambda x, y: x+y.__str__(), self.argument_nodes, ", ") + ")"
 
 
 class AST_FunctionArgument(AST_Node):
@@ -168,7 +170,7 @@ class AST_VariableReference(AST_Node):
 
         """
         super().__init__("AST_VariableReference")
-        self.name = variable_name
+        self.name: str = variable_name
 
     def __str__(self, index: int=0) -> str:
         """ Returns a string version of the object and je subnodes of the object
@@ -184,6 +186,23 @@ class AST_VariableReference(AST_Node):
                     A string version of the object and its subnodes
         """
         return "VariableReference( " + self.name + ")"
+
+
+class AST_List(AST_Variable):
+    def __init__(self):
+        super().__init__()
+        self.value: List[AST_Node] = []
+        self.length: int = 0
+
+
+
+
+class AST_ListAcces(AST_VariableReference):
+    def __init__(self, variable_name: str, index_node: AST_Node):
+        super().__init__(variable_name)
+        self.name: str = variable_name
+        self.node: AST_Node = index_node
+
 
 
 class AST_IfStatement(AST_Node):
@@ -593,6 +612,9 @@ class AST_Program:
                stringify(self.CodeSequence, index)
 
 
+
+
+
 # stringifyCode :: AST_Node → Int → String
 def stringifyCode(codeLine: AST_Node, index: int) -> str:
     """ Turns a codeline into a string, withc indexing for code blocks
@@ -632,27 +654,6 @@ def returnFunc(func: AST_Function, index: int=0) -> str:
     """
     return index * "    " + func.__str__(index+1) + "\n"
 
-# rec_str :: [String] → String → String
-def rec_str(string_list: [str], extra: str="") -> str:
-    """ Concatonates multiple strings from a list into a single string
-
-            Parameters
-            ----------
-            string_list : [str]
-                A list of strings
-
-            extra : str
-                A string that can be added to the end of each string in the list except for the last item
-
-            Returns
-            -------
-            str
-                A long string made form all the strings in the string_list added together
-    """
-    if len(string_list) == 1:
-        return string_list[0].__str__()
-    else:
-        return string_list[0].__str__() + extra + rec_str(string_list[1:], extra)
 
 # rec_str :: [AST_Node] → Int → String
 def stringify(values: [AST_Node], index: int) -> str:
@@ -671,6 +672,6 @@ def stringify(values: [AST_Node], index: int) -> str:
             str
                 A long string made form all the string versions of nodes in the values list
     """
-    return rec_str(list(map(functools.partial(stringifyCode, index=index + 1), values)))
+    return reduce(lambda x, y: x+y, list(map(functools.partial(stringifyCode, index=index + 1), values)))
 
 

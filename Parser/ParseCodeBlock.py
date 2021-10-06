@@ -71,23 +71,35 @@ def parseCodeLine(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Progra
 
         elif isinstance(tokens[0], LEX_AssignmentOperator):
             return tuple(map(operator.add, ([], [AST_AssignmentOperator()], []), parseCodeLine(tokens[1:], tokens[0], ast_main, delimiters)))
+        elif tokens[0].value == "{":
+            print(tokens[0])
+            ls: AST_ArgumentList
+            rest: [LEX_Type]
+            ls, rest = parseArgumentList(tokens[1:], tokens[0], ast_main)
+            return tuple(map(operator.add, ([ls], [], []), parseCodeLine(rest, rest[0], ast_main, delimiters)))
 
         elif isinstance(tokens[0], LEX_Identifier):
             if is_it_a_function(tokens[0], ast_main):
                 return tuple(map(operator.add, ([], [], []),
                                  parseCodeLine(tokens[1:], tokens[0], ast_main, delimiters)))
             else:
-                #its either a regular variable or a function bake
-                if tokens[1].value == ".":
+                # its either a regular variable or a function bake or a list access
+                if tokens[1].value == ".":  # its a bake
                     if len(tokens) > 5:
                         if tokens[2].value == "bake":
                             if tokens[3].value == "(" and tokens[4].value == ")":
                                 f: AST_FunctionCallExecution = AST_FunctionCallExecution()
                                 f.name = tokens[0].value
                                 return tuple(map(operator.add, ([f], [], []), parseCodeLine(tokens[5:], tokens[0], ast_main, delimiters)))
-                    #its a bake
-                else:
-                    #its a regular variable
+
+                elif tokens[1].value == "[":  # its a list access
+                    node: AST_Node
+                    rest: [LEX_Type]
+                    node, rest = getNodeFromLine(tokens[2:], tokens[1], ast_main, (']',))
+                    var: AST_ListAcces = AST_ListAcces(tokens[0].value, node)
+                    return tuple(map(operator.add, ([var], [], []), parseCodeLine(rest[1:], rest[0], ast_main, delimiters)))
+                else:  # its a regular variable
+
                     return tuple(map(operator.add, ([AST_VariableReference(tokens[0].value)], [], []), parseCodeLine(tokens[1:], tokens[0], ast_main, delimiters)))
 
                 #not sure how to handle this yet
@@ -325,12 +337,12 @@ def parseArgumentList(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Pr
                     A list of the remaining lexer tokens
 
     """
-    if last_token.value == ')':
+    if last_token.value == ')' or last_token.value == '}':
         return AST_ArgumentList(), tokens
-    elif last_token.value == '(' or last_token.value == ',':
+    elif last_token.value == '(' or last_token.value == ',' or last_token.value == '{':
         op: AST_Operator
         rest: [LEX_Type]
-        op, rest = getNodeFromLine(tokens, last_token, ast_main, (',', ')'))
+        op, rest = getNodeFromLine(tokens, last_token, ast_main, (',', ')', '}'))
         args: AST_ArgumentList
         toks: [LEX_Type]
         args, toks = parseArgumentList(rest[1:], rest[0], ast_main)
@@ -538,16 +550,28 @@ def parseVariableCreation(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AS
 
     """
     if isinstance(last_token, LEX_Types):
+
         if isinstance(tokens[0], LEX_Identifier):
-            var = AST_Variable()
-            var.name = tokens[0].value
-            var.type = last_token.value
-            vals: [AST_Node]
-            ops: [AST_Operator]
-            rest: [LEX_Type]
-            vals, ops, rest = parseCodeLine(tokens[1:], tokens[0], ast_main, ('\n',))
-            vals = [var] + vals
-            return fill(vals, construct(ops)), rest
+            if last_token.value == "groceries":
+                var = AST_List()
+                var.name = tokens[0].value
+                var.type = last_token.value
+                vals: [AST_Node]
+                ops: [AST_Operator]
+                rest: [LEX_Type]
+                vals, ops, rest = parseCodeLine(tokens[1:], tokens[0], ast_main, ('\n',))
+                vals = [var] + vals
+                return fill(vals, construct(ops)), rest
+            else:
+                var = AST_Variable()
+                var.name = tokens[0].value
+                var.type = last_token.value
+                vals: [AST_Node]
+                ops: [AST_Operator]
+                rest: [LEX_Type]
+                vals, ops, rest = parseCodeLine(tokens[1:], tokens[0], ast_main, ('\n',))
+                vals = [var] + vals
+                return fill(vals, construct(ops)), rest
 
 
 # parseFunctionVariable :: [LEX_Type] → LEX_Type → AST_Program → (AST_FunctionVariable, [LEX_Type])

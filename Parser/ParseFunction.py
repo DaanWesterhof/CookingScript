@@ -35,8 +35,8 @@ def getFunctionArguments(tokens : [LEX_Type], last_token : LEX_Type) -> ([AST_Fu
                 return [AST_FunctionArgument(tokens[1].value, tokens[2].value)] + arguments, last
 
 
-# parseFunction :: [LEX_Type] → LEX_Type → AST_Program → (AST_Function, [LEX_Type], LEX_Type)
-def parseFunction(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_Function, [LEX_Type], LEX_Type):
+# parseFunction :: [LEX_Type] → LEX_Type → AST_Program → (AST_Function, [LEX_Type], LEX_Type, AST_Program)
+def parseFunction(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_Function, [LEX_Type], LEX_Type, AST_Program):
     """ Parses tokens to create a function object after a recipe token has been found
 
             Parameters
@@ -62,6 +62,9 @@ def parseFunction(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Progra
 
                 LEX_Type
                     The last parsed lexer token
+
+                AST_Program
+                    The program as we already create a dictionary location for the function is this function
     """
     if last_token.value == "recipe":
         if tokens[0].type == "Identifier":
@@ -69,12 +72,12 @@ def parseFunction(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Progra
             func: AST_Function
             rest_tokens: [LEX_Type]
             final_token: LEX_Type
-            func, rest_tokens, final_token = parseFunction(tokens[1:], tokens[0], ast_main)
+            func, rest_tokens, final_token, ast_main = parseFunction(tokens[1:], tokens[0], ast_main)
             func.name = tokens[0].value
             if func.CodeSequence is None:
                 print("no code in function, expected code after Bake:")
                 exit()
-            return func, rest_tokens, final_token
+            return func, rest_tokens, final_token, ast_main
         else:
             print("missing_identifier")
             exit()
@@ -84,9 +87,9 @@ def parseFunction(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Progra
                 func: AST_Function
                 rest_tokens: [LEX_Type]
                 final_token: LEX_Type
-                func, rest_tokens, final_token = parseFunction(tokens[2:], tokens[1], ast_main)
+                func, rest_tokens, final_token, ast_main = parseFunction(tokens[2:], tokens[1], ast_main)
                 func.ReturnType = tokens[1].value
-                return func, rest_tokens, final_token
+                return func, rest_tokens, final_token, ast_main
             else:
                 print("expected return type")
                 exit()
@@ -100,9 +103,9 @@ def parseFunction(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Progra
                     arguments: [AST_FunctionArgument]
                     rest_tokens: [LEX_Type]
                     arguments, rest_tokens = getFunctionArguments(tokens[2:], last_token)
-                    func, rest_tokens, final_token = parseFunction(rest_tokens[1:], rest_tokens[0], ast_main)
+                    func, rest_tokens, final_token, ast_main = parseFunction(rest_tokens[1:], rest_tokens[0], ast_main)
                     func.argumentList = arguments
-                    return func, rest_tokens, final_token
+                    return func, rest_tokens, final_token, ast_main
                 else:
                     print("expected \":\" after \"Prepare\"")
                     exit()
@@ -114,7 +117,7 @@ def parseFunction(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Progra
                     rest_tokens: [LEX_Type]
                     code, rest_tokens = createCodeBlock(tokens[2:], tokens[1], ast_main)
                     func.CodeSequence = code
-                    return func, rest_tokens[1:], rest_tokens[0]
+                    return func, rest_tokens[1:], rest_tokens[0], ast_main
                 else:
                     print("expected \":\" after Bake")
                     exit()
