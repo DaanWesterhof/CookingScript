@@ -56,7 +56,7 @@ def assignTypes(tokens: [str], last_token: str=None) -> [LEX_Type]:
         return [LEX_AssignmentOperator(tokens[0])] + assignTypes(tokens[1:], tokens[0])
     elif tokens[0] == '-' and last_token == '\n':
         return [LEX_ItemLister(tokens[0])] + assignTypes(tokens[1:], tokens[0])
-    elif tokens[0] in "+-\*":
+    elif tokens[0] in "+-/*":
         return [LEX_Operator(tokens[0])] + assignTypes(tokens[1:], tokens[0])
     elif tokens[0] == '(' or tokens[0] == ')':
         return [LEX_Bracket(tokens[0])] + assignTypes(tokens[1:], tokens[0])
@@ -73,29 +73,6 @@ def assignTypes(tokens: [str], last_token: str=None) -> [LEX_Type]:
     elif tokens[0].isalnum() or (tokens[0][0] == '$' and tokens[0][1:].isalnum()):
         return [LEX_Identifier(tokens[0])] + assignTypes(tokens[1:], tokens[0])
     return assignTypes(tokens[1:], tokens[0])
-
-
-# remove_useless :: [String] → [String]
-def remove_useless(tokens: [str]) -> [str]:
-    """Removes unwanted strings from the list
-
-            Parameters
-            ----------
-            tokens : [str]
-                A list of strings
-
-            Returns
-            -------
-            list
-                A list of strings
-    """
-    if len(tokens) == 0:
-        return []
-    else:
-        if tokens[0] == '':
-            return remove_useless(tokens[1:])
-        else:
-            return [tokens[0]] + remove_useless(tokens[1:])
 
 
 # subsplit :: [String] → [String]
@@ -117,14 +94,14 @@ def subsplit(tokens: [str]) -> [str]:
     """
     if len(tokens) == 1:
         if tokens[0] == "->":
-            return remove_useless([tokens[0]] + subsplit(tokens[1:]))
+            return list(filter(lambda token: token != '', ([tokens[0]] + subsplit(tokens[1:]))))
         else:
-            return remove_useless(re.split('([\[\]\n:.,()+-/*"{}])', tokens[0]))
+            return list(filter(lambda token: token != '', (re.split('([\[\]\n:.,()+-/*"{}])', tokens[0]))))
     else:
         if tokens[0] == "->":
-            return remove_useless([tokens[0]] + subsplit(tokens[1:]))
+            return list(filter(lambda token: token != '', ([tokens[0]] + subsplit(tokens[1:]))))
         else:
-            return remove_useless(re.split('([\[\]\n:.,()+-/*"{}])', tokens[0]) + subsplit(tokens[1:]))
+            return list(filter(lambda token: token != '', (re.split('([\[\]\n:.,()+-/*"{}])', tokens[0]) + subsplit(tokens[1:]))))
 
 # these functions are used to fix the strings during the lexing phase
 
