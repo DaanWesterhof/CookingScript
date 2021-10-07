@@ -10,7 +10,8 @@ keywordslist = [
     "done",
     "step",
     "start",
-    "cookbook"
+    "cookbook",
+    "recipes"
 ]
 
 typeList = [

@@ -19,7 +19,7 @@ class running_context():
 
 
 # evaluate_condition :: AST_Node → AST_Program → [running_context] → Bool
-def evaluate_condition(node: AST_Node, ast_main: AST_Program, context: [running_context]) -> bool:
+def evaluate_condition(node: AST_Node, ast_main: AST_Program, context: List[running_context]) -> bool:
     """ Evaluate a condition that needs to result in true or false.
         It results true if the evaluation results in true or an integer bigger than 0
 
@@ -31,7 +31,7 @@ def evaluate_condition(node: AST_Node, ast_main: AST_Program, context: [running_
             ast_main : AST_Program
                 The root of the program tree containing all program data
 
-            context : [running_context]
+            context : List[running_context]
                 The context of the code in runtime
 
             Returns
@@ -52,23 +52,23 @@ def evaluate_condition(node: AST_Node, ast_main: AST_Program, context: [running_
 
 
 # evaluate_argument_list :: [AST_Node] → AST_Program → [running_context] → [AST_Literal]
-def evaluate_argument_list(node_list: [AST_Node], ast_main: AST_Program, context: [running_context]) -> [AST_Literal]:
+def evaluate_argument_list(node_list: List[AST_Node], ast_main: AST_Program, context: List[running_context]) -> List[AST_Literal]:
     """ Evaluate all nodes in an argument list and return a list of just AST literals
 
             Parameters
             ----------
-            node_list : [AST_Node]
+            node_list : List[AST_Node]
                 A list containing all arguments to a function
 
             ast_main : AST_Program
                 The root of the program tree containing all program data
 
-            context : [running_context]
+            context : List[running_context]
                 The context of the code in runtime
 
             Returns
             -------
-            list[AST_Literal]
+            List[AST_Literal]
                 A list containing the literal values of the results of the evaluation of the nodes of node_list
 
         """
@@ -76,7 +76,7 @@ def evaluate_argument_list(node_list: [AST_Node], ast_main: AST_Program, context
         return []
     else:
         val: AST_Literal
-        new_context: [running_context]
+        new_context: List[running_context]
         val, new_context = evaluate_tree(node_list[0], ast_main, context)
         return [val] + evaluate_argument_list(node_list[1:], ast_main, new_context)
 
@@ -103,7 +103,7 @@ def print_items(args: List[AST_Node]):
 
         Parameters
         ----------
-        args: [AST_Node]
+        args: List[AST_Node]
             This is a list of values that need to be printed to the terminal
 
     """
@@ -133,7 +133,7 @@ def executingCodeBlock(nodes: List[AST_Node], index: int, ast_main: AST_Program,
 
         Parameters
         ----------
-        nodes: [AST_Node]
+        nodes: List[AST_Node]
             This is a list of code lines in the code block which need to be evaluated
 
         index : int
@@ -142,20 +142,22 @@ def executingCodeBlock(nodes: List[AST_Node], index: int, ast_main: AST_Program,
         ast_main: AST_Program
             This is the root node of the program containing all program data
 
-        context: [running_context]
+        context: List[running_context]
             This is the context of the code where the variables are stored,
             evey scoped code block adds a entry if they are allowed to access the previous scope as well
             If they are not allowed to access the previous scope, a new list will be passed thru to them
 
         Returns
         -------
-        Tuple[AST_Literal, list[running_context]]
+        Tuple[AST_Literal, List[running_context]]
             AST_Literal
                 If it encounters a Return statement it will return the calulated value of that statement,
                 otherwise this function will return none.
-            list[running_context]
+            List[running_context]
                 It will also return the context as the context might have changed during the execution of one of the nodes
     """
+    val: AST_Node
+    context: List[running_context]
     if index == len(nodes):
         return None, context[:1]
     elif isinstance(nodes[index], AST_IfStatement):
@@ -196,7 +198,7 @@ def find_value_in_context_list(name: str, context: List[running_context]) -> (AS
         name : str
             The name of the variable to look for
 
-        context : list[running_context]
+        context : List[running_context]
             The list of context objects to search in
 
         Returns
@@ -208,7 +210,7 @@ def find_value_in_context_list(name: str, context: List[running_context]) -> (AS
                 if the variable has been found the index of the context it was found in will be returned
 
     """
-    if len(context) == 0:
+    if len(context) <= 0:
         return None, 0
     if name in context[-1].variables:
         return context[-1].variables[name], -1
@@ -374,7 +376,7 @@ def evaluate_smaller_equals(left_node: AST_Literal, right_node: AST_Literal) -> 
         AST_Bool
             A AST_Bool object with the value true if the left node was smaller or equal to the right node
     """
-    AST_Bool(left_node <= right_node)
+    AST_Bool(left_node.value <= right_node.value)
 
 
 # evaluate_larger_equals :: AST_Literal → AST_Literal → AST_Bool
@@ -395,7 +397,7 @@ def evaluate_larger_equals(left_node: AST_Literal, right_node: AST_Literal) -> A
         AST_Bool
             A AST_Bool object with the value true if the left node was larger or equal to the right node
     """
-    return AST_Bool(left_node >= right_node)
+    return AST_Bool(left_node.value >= right_node.value)
 
 
 # evaluate_not_equal :: AST_Literal → AST_Literal → AST_Bool
@@ -461,38 +463,51 @@ def evaluate_smaller_then(left_node: AST_Literal, right_node: AST_Literal) -> Op
 
 
 # add_arguments_to_context :: [AST_Node] → [AST_Literal] → [running_context] → int → [running_context]
-def add_arguments_to_context(argument_list: [AST_Node], args: [AST_Literal], context: [running_context], index: int=0) -> [running_context]: #todo check if the variable type is correct
+def add_arguments_to_context(argument_list: List[AST_Node], args: List[AST_Literal], context: List[running_context], index: int=0) -> List[running_context]: #todo check if the variable type is correct
     """ Add parameter values to the context to act ass variables for a function
 
         Parameters
         ----------
-        argument_list: [AST_Node]
+        argument_list: List[AST_Node]
             This is the list of arguments expected by the functions
 
-        args: [AST_Literal]
+        args: List[AST_Literal]
             This is the list of values passed to the function as parameters
 
-        context: [running_context]
+        context: List[running_context]
             This is the context of the function where the variables need to be placed
 
         index: int, optional
             This is the index of which item of the args is now to be added (default value = 0)
+
+        Returns
+        -------
+        List[running_context]
+            The new context containing the variables
     """
 
     if len(args) == index:
         return context
     else:
-        new_var: AST_Variable = AST_Variable()
-        new_var.value = args[index]
-        new_var.name = argument_list[index].name
-        new_var.node_type = argument_list[index].type
-        context[-1].variables[argument_list[index].name] = new_var
-        return add_arguments_to_context(argument_list, args, context, index+1)
+        if argument_list[index].type == 'groceries':
+            new_var: AST_Variable = AST_Variable()
+            new_var.value = args[index].value
+            new_var.name = argument_list[index].name
+            new_var.node_type = argument_list[index].type
+            context[-1].variables[argument_list[index].name] = new_var
+            return add_arguments_to_context(argument_list, args, context, index + 1)
+        else:
+            new_var: AST_Variable = AST_Variable()
+            new_var.value = args[index]
+            new_var.name = argument_list[index].name
+            new_var.node_type = argument_list[index].type
+            context[-1].variables[argument_list[index].name] = new_var
+            return add_arguments_to_context(argument_list, args, context, index+1)
 
 
 #todo error check for types and add functioncall support
 # evaluate_tree :: AST_Node → AST_Program → [running_context]  → (AST_Node, [running_context])
-def evaluate_tree(tree: AST_Node, ast_main: AST_Program, context: [running_context]) -> (AST_Node, [running_context]):
+def evaluate_tree(tree: AST_Node, ast_main: AST_Program, context: List[running_context]) -> (AST_Node, List[running_context]):
     """ This function evaluates a tree of nodes to execute its functions, assignments or other calculations.
             Even if the code has no further impact, for example: "6+6" it will still be evaluated
 
@@ -504,17 +519,21 @@ def evaluate_tree(tree: AST_Node, ast_main: AST_Program, context: [running_conte
         ast_main: AST_Program
             This is the root node of the program containing all program data
 
-        context: [running_context]
+        context: List[running_context]
             This is the context of the code where the variables are stored,
             evey scoped code block adds a entry if they are allowed to access the previous scope as well
             If they are not allowed to access the previous scope, a new list will be passed thru to them
 
         Returns
         -------
-        Tuple[AST_literal, list[running_context]]
+        Tuple[AST_literal, List[running_context]]
             It returns the calculated value if there is one, other wise its non, it will also return the context
             as it might have changed due to variable assignments
     """
+    val: AST_Node
+    ind: int
+    index: int
+    var: AST_Node
     if isinstance(tree, AST_Literal):
         return tree, context
     elif isinstance(tree, AST_VariableReference):
@@ -566,6 +585,7 @@ def evaluate_tree(tree: AST_Node, ast_main: AST_Program, context: [running_conte
         elif isinstance(tree.left, AST_VariableReference):
             if isinstance(tree.left, AST_ListAcces):
                 var: AST_List
+                index: int
                 var, index = find_value_in_context_list(tree.left.name, context)
                 val, context = evaluate_tree(tree.right, ast_main, context)
 
@@ -573,8 +593,9 @@ def evaluate_tree(tree: AST_Node, ast_main: AST_Program, context: [running_conte
                 context[index].variables[tree.left.name] = var
 
             else:
-                val, context = evaluate_tree(tree.right, ast_main, context)
                 var, ind = find_value_in_context_list(tree.left.name, context)
+                val, context = evaluate_tree(tree.right, ast_main, context)
+
                 if isinstance(var, AST_List):
                     if isinstance(val, AST_ArgumentList):
                         if len(val.argument_nodes) == var.length:
@@ -584,6 +605,9 @@ def evaluate_tree(tree: AST_Node, ast_main: AST_Program, context: [running_conte
                     elif isinstance(val, AST_Integer):
                         var.length = val.value
                         var.value = [AST_Integer(0)] * val.value
+                    elif isinstance(val, AST_List):
+                        var.length = val.length
+                        var.value = val.value
                     else:
                         pass  # throw error cant assign regular value to argument list, use []
                 else:
@@ -598,6 +622,8 @@ def evaluate_tree(tree: AST_Node, ast_main: AST_Program, context: [running_conte
             return None, context
 
     elif isinstance(tree, AST_Operator):
+        val_l: AST_Literal
+        val_r: AST_Literal
         val_l, context = evaluate_tree(tree.left, ast_main, context)
         val_r, context = evaluate_tree(tree.right, ast_main, context)
 

@@ -1,10 +1,11 @@
 from Lexer.LEX_Tokens import *
 from Definitions import *
 import re
+from typing import *
 
 
 # validateForString :: String → String → Bool
-def validateForString(tokens: [str], last_token: str) -> bool:
+def validateForString(tokens: List[str], last_token: str) -> bool:
     """ Checks if the current token is a string
 
             Parameters

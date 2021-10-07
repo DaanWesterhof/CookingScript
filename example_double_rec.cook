@@ -1,0 +1,36 @@
+recipes
+    - even
+    - odd
+done
+
+
+
+recipe odd -> egg
+    prepare:
+        - litre n
+    bake:
+        weigh(n == 0)
+            serve broken
+        done
+        even evencall = prepare(n-1)
+        serve evencall.bake()
+    done
+
+recipe even -> egg
+    prepare:
+        - litre n
+    bake:
+        weigh(n == 0)
+            serve whole
+        done
+        odd oddccall = prepare(n-1)
+        serve oddccall.bake()
+    done
+
+start:
+    taste("hey")
+    odd funccall = prepare(9)
+    taste(funccall.bake())
+
+
+done

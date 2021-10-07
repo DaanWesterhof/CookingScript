@@ -1,5 +1,7 @@
 from Definitions import *
 from Parser.AST_Nodes import *
+from typing import *
+
 
 class AST_Operator(AST_Node):
     """ A class for operator expressions

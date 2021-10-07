@@ -129,7 +129,7 @@ recipe fib -> litre
     prepare:
         - litre n
     bake:
-        weigh n <= 1
+        weigh( n <= 1 )
             serve n
         done
         fib fib_left = prepare(n - 1)
@@ -177,8 +177,10 @@ python CookingScript.py main.cook hey i am a commandline passed argumen 1 2 3 br
 ```
 These arguments will be available in he program as variables. These are named "$arg" + the number of the argument.
 So "hey" in this call would be "$arg0" in your program.
+To see if there are any arguments avalaible you can check the "$arglen" variable. This variable tells how many arguments have been passed
 
 ```
+litre arguments = $arglen
 litre param1 = $arg0
 ```
 
@@ -195,15 +197,15 @@ These classes with inheritance can be found in the following files:
  - [Lexer/LEX_Tokens.py]
  - [Parser/AST_Nodes.py]
  - [Parser/Operators.py]
- The most intresting example is this one: [Parser/AST_Nodes.py] - [388]
+ The most intresting example is this one: [Parser/AST_Nodes.py] - [211]
 
 
 To simplify the comparison operators i have made a python decorator. This decorator checks if the two values that will be compared are compatible.
 This decorator [Runner/Runner.py] - [327] is aplied on the evaluators for the following operators:
-- <=    [Runner/Runner.py] - [361]
-- \>=   [Runner/Runner.py] - [382]
-- \>    [Runner/Runner.py] - [423]
-- <     [Runner/Runner.py] - [444]
+- <=    [Runner/Runner.py] - [363]
+- \>=   [Runner/Runner.py] - [384]
+- \>    [Runner/Runner.py] - [425]
+- <     [Runner/Runner.py] - [446]
  
  
 To simplify some functions i have also applied higher order funtions in my code. These functions accept a function as their parameter and they apply this function on a iteratable object (list)
@@ -211,6 +213,75 @@ I have used these higher order funtions in the following locations:
 
 1. [Parser/ParseCodeBlock.py] - [68] It map() is used multiple times in this function, i have only listed it once here as the usage is identical. I use it to sum the values of 2 tuples into 1 tuple of the same length
 
-2. [Lexer/Lexer.py] - [97] Here filter() is used to filter out useless tokens such as ''. These hold no value for the program so they should be removed, it is used a few times in the same way so i only include it in this list once.
+2. [Lexer/Lexer.py] - [98] Here filter() is used to filter out useless tokens such as ''. These hold no value for the program so they should be removed, it is used a few times in the same way so i only include it in this list once.
 
-3. [Parser/AST_Nodes.py] - [675] Here we use reduce() and map() in one code line, this function is used to turn ASt_Nodes into strings, so we can print the AST
+3. [Parser/AST_Nodes.py] - [701] Here we use reduce() and map() in one code line, this function is used to turn ASt_Nodes into strings, so we can print the AST
+
+#ATP Checklist
+###Gekozen taal:
+Cooking Script: Zelf ontworpen
+
+###Turing-compleet omdat:
+De taal lists, variabelen, loops, integers assignment operators en gewone operators ondersteund.
+Daardoor kan hij alle functionaliteiten van brainfuck implementeren, en is net zoals brainfuck dus turing complete
+ 
+
+###Code is geschreven in functionele stijl.
+Ja mijn code is volledig geschreven in functionele stijl
+
+ 
+
+###Taal ondersteunt:
+Mijn taal ondersteund onderandere de minimale onderstaande eisen
+Loops Voorbeeld: [main.cook] - [11]
+If statements: [main.cook] - [31]
+
+###Libraries die worden gebruikt:
+- functools
+- typing
+- sys
+- operator
+
+Deze zitten allemaal standaard in python en zouden geen probleem moeten leveren.
+
+###Mij Code Bevat:
+
+Classes met inheritance: bijvoorbeeld [Parser/AST_Nodes.py] - [211]
+
+Object-printing voor elke class: [ja]
+
+Decorator: functiedefinitie op [Runner/Runner.py] - [327], toegepast op 
+- <=    [Runner/Runner.py] - [363]
+- \>=   [Runner/Runner.py] - [384]
+- \>    [Runner/Runner.py] - [425]
+- <     [Runner/Runner.py] - [446]
+
+Type-annotatie: Haskell-stijl in comments: [ja]; Python-stijl in functiedefinities: [ja]
+
+Minstens drie toepassingen van hogere-orde functies:
+
+1. [Parser/ParseCodeBlock.py] - [68] It map() is used multiple times in this function, i have only listed it once here as the usage is identical. I use it to sum the values of 2 tuples into 1 tuple of the same length
+
+2. [Lexer/Lexer.py] - [98] Here filter() is used to filter out useless tokens such as ''. These hold no value for the program so they should be removed, it is used a few times in the same way so i only include it in this list once.
+
+3. [Parser/AST_Nodes.py] - [701] Here we use reduce() and map() in one code line, this function is used to turn ASt_Nodes into strings, so we can print the AST
+
+ 
+
+Interpreter-functionaliteit Must-have:
+
+Functies: [meer per file]
+
+Functie-parameters kunnen aan de interpreter meegegeven worden door:
+    door bij het starten van het programma in de commandline na de bestandsnaam parameters mee te geven.
+
+Functies kunnen andere functies aanroepen: zie voorbeeld [example_double_rec.cook] - [15]
+
+Functie resultaat wordt op de volgende manier weergegeven:
+    Je kan de taste() functie gebruiken om waardes naar de terminal te printen
+    [main.cook] - [30]
+    
+    
+Interpreter-functionaliteit (should/could-have):
+Zie hierbovenstaande uitleg van de taal voor alle functionaliteiten.
+

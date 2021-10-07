@@ -4,11 +4,12 @@ from Lexer.Lexer import *
 from Parser.Operators import *
 from Parser.ParseCodeBlock import *
 from Parser.ParseFunction import *
+from typing import *
 import operator
 
 
 # recursiveParse :: [LEX_Type] → AST_Program → AST_Program
-def recursiveParse(tokens: [LEX_Type], ast_main: AST_Program, parseCodeBlock: bool=True) -> AST_Program:
+def recursiveParse(tokens: List[LEX_Type], ast_main: AST_Program, parseCodeBlock: bool=True) -> AST_Program:
     """Parsed the tokens provided into a runnable AST
 
                 Parameters
@@ -24,10 +25,13 @@ def recursiveParse(tokens: [LEX_Type], ast_main: AST_Program, parseCodeBlock: bo
     if len(tokens) > 0:
         if tokens[0].type == "Keyword":
             if tokens[0].value == "recipe":
-
+                func: AST_Function
+                toks: List[LEX_Type]
+                rest: LEX_Type
+                ast_main: AST_Program
                 func, toks, rest, ast_main = parseFunction(tokens[1:], tokens[0], ast_main)
                 ast_main.Functions[func.name] = func
-                return recursiveParse(toks, ast_main)
+                return recursiveParse(toks, ast_main, parseCodeBlock)
             elif tokens[0].value == "start" and parseCodeBlock:
                 if tokens[1].value == ":":
 
@@ -35,10 +39,17 @@ def recursiveParse(tokens: [LEX_Type], ast_main: AST_Program, parseCodeBlock: bo
                     return ast_main
             elif tokens[0].value == "cookbook":
                 if isinstance(tokens[1], LEX_String):
+
                     ast_main = recursiveParse(lexer(tokens[1].value), ast_main, False)
-                    return recursiveParse(tokens[2:], ast_main)
+
+                    return recursiveParse(tokens[2:], ast_main, parseCodeBlock)
+            elif tokens[0].value == "recipes":
+                ast_main, rest = get_recipe_names(tokens[1:], ast_main)
+                return recursiveParse(rest, ast_main, parseCodeBlock)
+            else:
+                return recursiveParse(tokens[1:], ast_main, parseCodeBlock)
         else:
-            return recursiveParse(tokens[1:], ast_main)
+            return recursiveParse(tokens[1:], ast_main, parseCodeBlock)
     else:
         return ast_main
 

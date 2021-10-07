@@ -1,50 +1,35 @@
-cookbook "second.cook"
+cookbook "example_double_rec.cook"
+cookbook "example_loopig.cook"
 
-recipe fab -> litre
+recipe fillListWithCheese -> groceries
     prepare:
-        - litre i
-        - litre b
+        - cheese word
+        - groceries list
+        - litre length
     bake:
-        taste("boo")
-        serve i
-    done
-
-
-recipe fib -> litre
-    prepare:
-        - litre i
-        - litre b
-    bake:
-        taste(i)
-        weigh(i > 200)
-            serve i
+        litre n = 0
+        mix(n < length)
+            list[n] = word
+            n = n + 1
         done
-        fib bleb = prepare(i + 10, b)
-        serve bleb.bake()
+        serve list
     done
+
+
 
 start:
-    litre val = 0
-    fib bla = prepare(30, 30)
-    taste(bla.bake())
-    groceries lijst = 600
-    taste(lijst[0])
-    taste(lijst)
-    lijst[3] = "hey"
+    odd oddcall = prepare(9)
+    taste(oddcall.bake())
 
-    weigh( lijst[0] == 1)
-        taste("ITS WOORKING")
+    sommig somcall = prepare(9)
+    taste(somcall.bake())
+
+    groceries iwantcheese = 100
+    fillListWithCheese cheesmaker = prepare("cheese", iwantcheese, 100)
+    iwantcheese = cheesmaker.bake()
+    taste(iwantcheese)
+    weigh($arglen > 0)
+        taste($arg0)
     done
-    taste(lijst)
-    mix(val < 20)
-        weigh( val == 5)
-            taste("FIIIIIVEEEEE")
-            litre boo = 1
-            taste(boo)
-        done
-        taste(val)
-        val = val + 1
-    done
-    taste(val * "boob ")
-    taste(4/2)
+
 done

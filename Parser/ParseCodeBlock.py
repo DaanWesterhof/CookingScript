@@ -27,14 +27,14 @@ def is_it_a_function(token: LEX_Identifier, ast_main: AST_Program) -> bool:
     return False
 
 
-#todo make . a operator for functions and class values?
+# todo make . a operator for functions and class values?
 # parseCodeLine :: [LEX_Type] → LEX_Type → AST_Program → (str) → ([AST_Node], [AST_Operator], [LEX_Type])
-def parseCodeLine(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program, delimiters: Tuple[str, ...]=('\n',)) -> ([AST_Node], [AST_Operator], [LEX_Type]):
+def parseCodeLine(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Program, delimiters: Tuple[str, ...]=('\n',)) -> (List[AST_Node], List[AST_Operator], List[LEX_Type]):
     """Parses a line of code to extract all values/nodes and operators into two lists
 
             Parameters
             ----------
-            tokens : [LEX_Identifier]
+            tokens : List[LEX_Identifier]
                 An identifier that might refer to a function
 
             last_token : LEX_Type
@@ -48,14 +48,14 @@ def parseCodeLine(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Progra
 
             Returns
             -------
-            tuple[list[AST_Node], list[AST_Operator], list[LEX_Type]]
-                list[AST_Node]
+            tuple[List[AST_Node], List[AST_Operator], List[LEX_Type]]
+                List[AST_Node]
                     A list of values/nodes that are not operators found in the code line
 
-                list[AST_Operator]
+                List[AST_Operator]
                     A list of operators found in the code line
 
-                list[LEX_Type]
+                List[LEX_Type]
                     A list of the remaining lex tokens
 
     """
@@ -74,7 +74,7 @@ def parseCodeLine(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Progra
         elif tokens[0].value == "{":
             print(tokens[0])
             ls: AST_ArgumentList
-            rest: [LEX_Type]
+            rest: List[LEX_Type]
             ls, rest = parseArgumentList(tokens[1:], tokens[0], ast_main)
             return tuple(map(operator.add, ([ls], [], []), parseCodeLine(rest, rest[0], ast_main, delimiters)))
 
@@ -94,7 +94,7 @@ def parseCodeLine(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Progra
 
                 elif tokens[1].value == "[":  # its a list access
                     node: AST_Node
-                    rest: [LEX_Type]
+                    rest: List[LEX_Type]
                     node, rest = getNodeFromLine(tokens[2:], tokens[1], ast_main, (']',))
                     var: AST_ListAcces = AST_ListAcces(tokens[0].value, node)
                     return tuple(map(operator.add, ([var], [], []), parseCodeLine(rest[1:], rest[0], ast_main, delimiters)))
@@ -120,7 +120,7 @@ def parseCodeLine(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Progra
             if tokens[0].value == "prepare":
                 if tokens[1].value == "(":
                     val: AST_ArgumentList
-                    rest: [LEX_Type]
+                    rest: List[LEX_Type]
                     val, rest = parseArgumentList(tokens[2:], tokens[1], ast_main)
                     return tuple(map(operator.add, ([val], [], []), parseCodeLine(rest, rest[0], ast_main, delimiters)))
             else:
@@ -231,12 +231,12 @@ def putValue(value: AST_Node, node: AST_Operator) -> (bool, AST_Operator):
 
 
 # construct :: [AST_Operator] → AST_Operator
-def construct(OperatorList: [AST_Operator]) ->AST_Operator:
+def construct(OperatorList: List[AST_Operator]) -> AST_Operator:
     """ Puts all operators together into one tree
 
             Parameters
             ----------
-            OperatorList : [AST_Operator]
+            OperatorList : List[AST_Operator]
                 The list of operators that will be put together into 1 tree
 
             Returns
@@ -252,12 +252,12 @@ def construct(OperatorList: [AST_Operator]) ->AST_Operator:
 
 
 # fill :: [AST_Node] → AST_Operator → AST_Operator
-def fill(values: [AST_Node], node: AST_Operator) -> AST_Operator:
+def fill(values: List[AST_Node], node: AST_Operator) -> AST_Operator:
     """ Fills the operator tree with values
 
             Parameters
             ----------
-            values : [AST_Node]
+            values : List[AST_Node]
                 A list of values that have to be placed in the operator tree
 
             Returns
@@ -276,12 +276,12 @@ def fill(values: [AST_Node], node: AST_Operator) -> AST_Operator:
 
 
 # getNodeFromLine :: [LEX_Type] → LEX_Type  → AST_Program → (str) → (AST_Operator, [LEX_Type])
-def getNodeFromLine(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program, delimiters: Tuple[str, ...]=('\n',)) -> (AST_Operator, [LEX_Type]):
+def getNodeFromLine(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Program, delimiters: Tuple[str, ...]=('\n',)) -> (AST_Operator, List[LEX_Type]):
     """ Parses a line of code and creates a runnable operator tree with the values found
 
             Parameters
             ----------
-            tokens : [LEX_Type]
+            tokens : List[LEX_Type]
                 A list of lexer tokens wich can be parsed
 
             last_token : LEX_Type
@@ -295,16 +295,16 @@ def getNodeFromLine(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Prog
 
             Returns
             -------
-            tuple[AST_Operator, list[LEX_Type]
+            tuple[AST_Operator, List[LEX_Type]
                 AST_Operator
                     A tree of operators where all non operator leaves are filled with values
-                list[LEX_Type]
+                List[LEX_Type]
                     A list of the remaining lexer tokens
 
     """
-    values: [AST_Node]
-    ops: [AST_Operator]
-    rest: [LEX_Type]
+    values: List[AST_Node]
+    ops: List[AST_Operator]
+    rest: List[LEX_Type]
     values, ops, rest = parseCodeLine(tokens, last_token, ast_main, delimiters)
     if len(values) == 1 and len(ops) == 0:
         return values[0], rest
@@ -314,12 +314,12 @@ def getNodeFromLine(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Prog
     return op, rest
 
 # parseArgumentList :: [LEX_Type] → LEX_Type  → AST_Program → (AST_ArgumentList, [LEX_Type])
-def parseArgumentList(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_ArgumentList, [LEX_Type]):
+def parseArgumentList(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_ArgumentList, [LEX_Type]):
     """ Parses the arguments given to a function and creates an argument list
 
             Parameters
             ----------
-            tokens : [LEX_Type]
+            tokens : List[LEX_Type]
                 A list of lexer tokens wich can be parsed
 
             last_token : LEX_Type
@@ -330,10 +330,10 @@ def parseArgumentList(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Pr
 
             Returns
             -------
-            tuple[AST_ArgumentList, list[LEX_Type]
+            Tuple[AST_ArgumentList, List[LEX_Type]
                 AST_ArgumentList
                     An ArgumentList object containing all nodes/arguments passed to a function
-                list[LEX_Type]
+                List[LEX_Type]
                     A list of the remaining lexer tokens
 
     """
@@ -341,22 +341,22 @@ def parseArgumentList(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Pr
         return AST_ArgumentList(), tokens
     elif last_token.value == '(' or last_token.value == ',' or last_token.value == '{':
         op: AST_Operator
-        rest: [LEX_Type]
+        rest: List[LEX_Type]
         op, rest = getNodeFromLine(tokens, last_token, ast_main, (',', ')', '}'))
         args: AST_ArgumentList
-        toks: [LEX_Type]
+        toks: List[LEX_Type]
         args, toks = parseArgumentList(rest[1:], rest[0], ast_main)
         args.argument_nodes.insert(0, op)
         return (args, toks)
 
 
 # parseWeigh :: [LEX_Type] → LEX_Type  → AST_Program → (AST_IfStatement, [LEX_Type])
-def parseWeigh(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_IfStatement, [LEX_Type]):
+def parseWeigh(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_IfStatement, List[LEX_Type]):
     """ Parses code until the done keyword to create a if statement code block
 
             Parameters
             ----------
-            tokens : [LEX_Type]
+            tokens : List[LEX_Type]
                 A list of lexer tokens which can be parsed
 
             last_token : LEX_Type
@@ -367,19 +367,19 @@ def parseWeigh(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) 
 
             Returns
             -------
-            tuple[AST_IfStatement, list[LEX_Type]
+            tuple[AST_IfStatement, List[LEX_Type]
                 AST_IfStatement
                     An AST_IfStatement object containing a condition and code
                     that is to be executed when the condition results in true
-                list[LEX_Type]
+                List[LEX_Type]
                     A list of the remaining lexer tokens
 
     """
     if last_token.value == "weigh":
         if tokens[0].value == "(":
             cond: AST_Operator
-            rest: [LEX_Type]
-            codeblock: [AST_Node]
+            rest: List[LEX_Type]
+            codeblock: List[AST_Node]
             cond, rest = getNodeFromLine(tokens[1:], tokens[0], ast_main, (')',))
             codeblock, rest = createCodeBlock(rest[1:], rest[0], ast_main)
             ifs: AST_IfStatement = AST_IfStatement()
@@ -389,12 +389,12 @@ def parseWeigh(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) 
 
 
 # parseMix :: [LEX_Type] → LEX_Type  → AST_Program → (AST_Loop, [LEX_Type])
-def parseMix(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_Loop, [LEX_Type]):
+def parseMix(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_Loop, List[LEX_Type]):
     """ Parses tokens until the done keyword to create a Loop code block
 
             Parameters
             ----------
-            tokens : [LEX_Type]
+            tokens : List[LEX_Type]
                 A list of lexer tokens which can be parsed
 
             last_token : LEX_Type
@@ -405,19 +405,19 @@ def parseMix(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) ->
 
             Returns
             -------
-            tuple[AST_Loop, list[LEX_Type]
+            Tuple[AST_Loop, List[LEX_Type]
                 AST_Loop
                     An AST_Loop object containing a condition and code
                     that is to be executed while the condition results in true
-                list[LEX_Type]
+                List[LEX_Type]
                     A list of the remaining lexer tokens
 
     """
     if last_token.value == "mix":
         if tokens[0].value == "(":
             cond: AST_Operator
-            rest: [LEX_Type]
-            codeblock: [AST_Node]
+            rest: List[LEX_Type]
+            codeblock: List[AST_Node]
             cond, rest = getNodeFromLine(tokens[1:], tokens[0], ast_main, (')',))
             codeblock, rest = createCodeBlock(rest[1:], rest[0], ast_main)
             loop: AST_Loop = AST_Loop()
@@ -427,12 +427,12 @@ def parseMix(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) ->
 
 
 # parseStep :: [LEX_Type] → LEX_Type  → AST_Program → (AST_Label, [LEX_Type])
-def parseStep(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_Label, [LEX_Type]): #todo this isnt actualy implemented in the runnen
+def parseStep(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_Label, List[LEX_Type]): #todo this isnt actualy implemented in the runnen
     """ Parses tokens to create a label that can be used as a goto statement
 
             Parameters
             ----------
-            tokens : [LEX_Type]
+            tokens : List[LEX_Type]
                 A list of lexer tokens which can be parsed
 
             last_token : LEX_Type
@@ -443,10 +443,10 @@ def parseStep(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -
 
             Returns
             -------
-            tuple[AST_Label, list[LEX_Type]
+            Tuple[AST_Label, List[LEX_Type]
                 AST_Label
                     An AST_Label object that can be jumped like a goto statement
-                list[LEX_Type]
+                List[LEX_Type]
                     A list of the remaining lexer tokens
 
     """
@@ -463,12 +463,12 @@ def parseStep(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -
 
 
 # parseTaste :: [LEX_Type] → LEX_Type  → AST_Program → (AST_PrintFunctionCall, [LEX_Type])
-def parseTaste(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_PrintFunctionCall, [LEX_Type]):
+def parseTaste(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_PrintFunctionCall, List[LEX_Type]):
     """ Parses tokens to create a print function call
 
             Parameters
             ----------
-            tokens : [LEX_Type]
+            tokens : List[LEX_Type]
                 A list of lexer tokens which can be parsed
 
             last_token : LEX_Type
@@ -479,28 +479,28 @@ def parseTaste(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) 
 
             Returns
             -------
-            tuple[AST_PrintFunctionCall, list[LEX_Type]
+            Tuple[AST_PrintFunctionCall, List[LEX_Type]
                 AST_PrintFunctionCall
                     An AST_PrintFunctionCall object that will print its arguments to the terminal
-                list[LEX_Type]
+                List[LEX_Type]
                     A list of the remaining lexer tokens
 
     """
     if last_token.value == "taste":
         if tokens[0].value == "(":
             args: AST_ArgumentList
-            lex_tokens: [LEX_Type]
+            lex_tokens: List[LEX_Type]
             args, lex_tokens = parseArgumentList(tokens[1:], tokens[0], ast_main)
             return AST_PrintFunctionCall(args), lex_tokens
 
 
 # parseServe :: [LEX_Type] → LEX_Type  → AST_Program → (AST_ReturnStatement, [LEX_Type])
-def parseServe(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_ReturnStatement, [LEX_Type]):
+def parseServe(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_ReturnStatement, List[LEX_Type]):
     """ Parses tokens to create a AST_ReturnStatement, which is used to return values from a function
 
             Parameters
             ----------
-            tokens : [LEX_Type]
+            tokens : List[LEX_Type]
                 A list of lexer tokens which can be parsed
 
             last_token : LEX_Type
@@ -511,27 +511,27 @@ def parseServe(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) 
 
             Returns
             -------
-            tuple[AST_ReturnStatement, list[LEX_Type]
+            Tuple[AST_ReturnStatement, List[LEX_Type]
                 AST_ReturnStatement
                     An AST_ReturnStatement object will return values from a function
-                list[LEX_Type]
+                List[LEX_Type]
                     A list of the remaining lexer tokens
 
     """
     if last_token.value == "serve":
         node: AST_ReturnStatement = AST_ReturnStatement()
-        rest: [LEX_Type]
+        rest: List[LEX_Type]
         node.value, rest = getNodeFromLine(tokens, last_token, ast_main, ('\n',))
         return node, rest
 
 
 # parseVariableCreation :: [LEX_Type] → LEX_Type  → AST_Program → (AST_Variable, [LEX_Type])
-def parseVariableCreation(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_Variable, [LEX_Type]):
+def parseVariableCreation(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_Variable, List[LEX_Type]):
     """ Parses tokens to create a AST_Variable, which is used to declare a variable
 
             Parameters
             ----------
-            tokens : [LEX_Type]
+            tokens : List[LEX_Type]
                 A list of lexer tokens which can be parsed
 
             last_token : LEX_Type
@@ -542,10 +542,10 @@ def parseVariableCreation(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AS
 
             Returns
             -------
-            tuple[AST_Variable, list[LEX_Type]
+            Tuple[AST_Variable, List[LEX_Type]
                 AST_Variable
                     An AST_Variable object will declare a variable in the running context
-                list[LEX_Type]
+                List[LEX_Type]
                     A list of the remaining lexer tokens
 
     """
@@ -556,9 +556,9 @@ def parseVariableCreation(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AS
                 var = AST_List()
                 var.name = tokens[0].value
                 var.type = last_token.value
-                vals: [AST_Node]
-                ops: [AST_Operator]
-                rest: [LEX_Type]
+                vals: List[AST_Node]
+                ops: List[AST_Operator]
+                rest: List[LEX_Type]
                 vals, ops, rest = parseCodeLine(tokens[1:], tokens[0], ast_main, ('\n',))
                 vals = [var] + vals
                 return fill(vals, construct(ops)), rest
@@ -575,12 +575,12 @@ def parseVariableCreation(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AS
 
 
 # parseFunctionVariable :: [LEX_Type] → LEX_Type → AST_Program → (AST_FunctionVariable, [LEX_Type])
-def parseFunctionVariable(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_FunctionVariable, [LEX_Type]):
+def parseFunctionVariable(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (AST_FunctionVariable, List[LEX_Type]):
     """ Parses tokens to create a AST_FunctionVariable, which is used to declare a variable
 
             Parameters
             ----------
-            tokens : [LEX_Type]
+            tokens : List[LEX_Type]
                 A list of lexer tokens which can be parsed
 
             last_token : LEX_Type
@@ -591,10 +591,10 @@ def parseFunctionVariable(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AS
 
             Returns
             -------
-            tuple[AST_FunctionVariable, list[LEX_Type]
+            Tuple[AST_FunctionVariable, List[LEX_Type]
                 AST_FunctionVariable
                     An AST_FunctionVariable object will declare a variable in the running context that is used to run a function
-                list[LEX_Type]
+                List[LEX_Type]
                     A list of the remaining lexer tokens
 
     """
@@ -603,21 +603,21 @@ def parseFunctionVariable(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AS
             var = AST_FunctionVariable()
             var.name = tokens[0].value
             var.FunctionName = last_token.value
-            vals: [AST_Node]
-            ops: [AST_Operator]
-            rest: [LEX_Type]
+            vals: List[AST_Node]
+            ops: List[AST_Operator]
+            rest: List[LEX_Type]
             vals, ops, rest = parseCodeLine(tokens[1:], tokens[0], ast_main, ('\n',))
             vals = [var] + vals
             return fill(vals, construct(ops)), rest
 
 
 # createCodeBlock :: [LEX_Type] → LEX_Type → AST_Program → ([AST_Node], [LEX_Type])
-def createCodeBlock(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> ([AST_Node], [LEX_Type]):
+def createCodeBlock(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Program) -> (List[AST_Node], List[LEX_Type]):
     """ Parses tokens to create a list of executable trees, that represent the code block in tree form
 
             Parameters
             ----------
-            tokens : [LEX_Type]
+            tokens : List[LEX_Type]
                 A list of lexer tokens which can be parsed
 
             last_token : LEX_Type
@@ -628,10 +628,10 @@ def createCodeBlock(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Prog
 
             Returns
             -------
-            tuple[list[AST_Node], list[LEX_Type]
-                list[AST_Node]
+            Tuple[List[AST_Node], List[LEX_Type]
+                List[AST_Node]
                     An list of nodes that can be evaluated by the runner to run the parsed program
-                list[LEX_Type]
+                List[LEX_Type]
                     A list of the remaining lexer tokens
 
     """
@@ -642,58 +642,58 @@ def createCodeBlock(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Prog
             pass #todo fix this
         elif tokens[0].value == "weigh":
             node: AST_IfStatement
-            rest: [LEX_Type]
+            rest: List[LEX_Type]
             node, rest = parseWeigh(tokens[1:], tokens[0], ast_main)
-            seq: [AST_Node]
+            seq: List[AST_Node]
             seq, rest = createCodeBlock(rest[1:], rest[0], ast_main)
             seq.insert(0, node)
             return seq, rest
         elif tokens[0].value == "mix":
             node: AST_Loop
-            rest: [LEX_Type]
+            rest: List[LEX_Type]
             node, rest = parseMix(tokens[1:], tokens[0], ast_main)
-            seq: [AST_Node]
+            seq: List[AST_Node]
             seq, rest = createCodeBlock(rest[1:], rest[0], ast_main)
             seq.insert(0, node)
             return seq, rest
         elif tokens[0].value == "step":
             node: AST_Label
-            rest: [LEX_Type]
+            rest: List[LEX_Type]
             node, rest = parseStep(tokens[1:], tokens[0], ast_main)
-            seq: [AST_Node]
+            seq: List[AST_Node]
             seq, rest = createCodeBlock(rest[1:], rest[0], ast_main)
             seq.insert(0, node)
             return seq, rest
         elif tokens[0].value == "taste":
             node: AST_PrintFunctionCall
-            rest: [LEX_Type]
+            rest: List[LEX_Type]
             node, rest = parseTaste(tokens[1:], tokens[0], ast_main)
-            seq: [AST_Node]
+            seq: List[AST_Node]
             seq, rest = createCodeBlock(rest[1:], rest[0], ast_main)
             seq.insert(0, node)
             return seq, rest
         elif tokens[0].value == "serve":
             node: AST_ReturnStatement
-            rest: [LEX_Type]
+            rest: List[LEX_Type]
             node, rest = parseServe(tokens[1:], tokens[0], ast_main)
-            seq: [AST_Node]
+            seq: List[AST_Node]
             seq, rest = createCodeBlock(rest[1:], rest[0], ast_main)
             seq.insert(0, node)
             return seq, rest
 
     elif isinstance(tokens[0], LEX_Types):
         node: AST_Variable
-        rest: [LEX_Type]
+        rest: List[LEX_Type]
         node, rest = parseVariableCreation(tokens[1:], tokens[0], ast_main)
-        seq: [AST_Node]
+        seq: List[AST_Node]
         seq, rest = createCodeBlock(rest[1:], rest[0], ast_main)
         seq.insert(0, node)
         return seq, rest
     elif tokens[0].value in ast_main.Functions: #todo gotta get this to work
         node: AST_FunctionVariable
-        rest: [LEX_Type]
+        rest: List[LEX_Type]
         node, rest = parseFunctionVariable(tokens[1:], tokens[0], ast_main)
-        seq: [AST_Node]
+        seq: List[AST_Node]
         seq, rest = createCodeBlock(rest[1:], rest[0], ast_main)
         seq.insert(0, node)
         return seq, rest
@@ -701,9 +701,9 @@ def createCodeBlock(tokens: [LEX_Type], last_token: LEX_Type, ast_main: AST_Prog
         return createCodeBlock(tokens[1:], tokens[0], ast_main)
     else:
         node: AST_Operator
-        rest: [LEX_Type]
+        rest: List[LEX_Type]
         op, rest = getNodeFromLine(tokens, last_token, ast_main, ('\n',))
-        seq: [AST_Node]
+        seq: List[AST_Node]
         seq, rest = createCodeBlock(rest[1:], rest[0], ast_main)
         seq.insert(0, op)
         return seq, rest

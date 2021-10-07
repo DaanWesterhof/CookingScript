@@ -46,14 +46,14 @@ class AST_ArgumentList(AST_Node):
 
         Attributes
         ----------
-        argument_nodes : [AST_Node]
+        argument_nodes : List[AST_Node]
             The list containing all AST_Node parameters
     """
     def __init__(self):
         """ Initialize the object and sets the type using the innit of its superclass
         """
         super().__init__("AST_ArgumentList")
-        self.argument_nodes: [AST_Node] = []
+        self.argument_nodes: List[AST_Node] = []
 
     def __str__(self, index: int=0) -> str:
         """ Returns a string version of the object and je subnodes of the object
@@ -189,6 +189,17 @@ class AST_VariableReference(AST_Node):
 
 
 class AST_List(AST_Variable):
+    """ A class used to for a list variable, it is able to store multiple literals
+
+        Attributes
+        ----------
+        value : List[AST_Node]
+            The name of the variable
+
+        length : Int
+            The length of the list
+
+    """
     def __init__(self):
         super().__init__()
         self.value: List[AST_Node] = []
@@ -198,6 +209,17 @@ class AST_List(AST_Variable):
 
 
 class AST_ListAcces(AST_VariableReference):
+    """ A class used to reference a list variable, you can get or set values to the list.
+
+        Attributes
+        ----------
+        name : str
+            The name of the variable
+
+        node : AST_Node
+            A node that can be evaluated to a index value
+
+    """
     def __init__(self, variable_name: str, index_node: AST_Node):
         super().__init__(variable_name)
         self.name: str = variable_name
@@ -210,7 +232,7 @@ class AST_IfStatement(AST_Node):
 
         Attributes
         ----------
-        CodeSequence : [AST_Node]
+        CodeSequence : List[AST_Node]
             A list of evaluatable nodes
         condition : AST_Node
             A AST_Node that results in either True or False
@@ -219,7 +241,7 @@ class AST_IfStatement(AST_Node):
         """ Initialize the object and sets the type using the innit of its superclass
         """
         super().__init__("AST_IfStatement")
-        self.CodeSequence: [AST_Node] = None
+        self.CodeSequence: List[AST_Node] = None
         self.condition: AST_Node = None
 
     def __str__(self, index: int=0) -> str:
@@ -243,7 +265,7 @@ class AST_Loop(AST_Node):
 
         Attributes
         ----------
-        CodeSequence : [AST_Node]
+        CodeSequence : List[AST_Node]
             A list of evaluatable nodes
         condition : AST_Node
             A AST_Node that results in either True or False
@@ -252,7 +274,7 @@ class AST_Loop(AST_Node):
         """ Initialize the object and sets the type using the innit of its superclass
         """
         super().__init__("AST_Loop")
-        self.CodeSequence: [AST_Node] = None
+        self.CodeSequence: List[AST_Node] = None
         self.condition: AST_Node = None
 
     def __str__(self, index: int=0) -> str:
@@ -260,7 +282,7 @@ class AST_Loop(AST_Node):
 
                 Parameters
                 ----------
-                index : int
+                index : Int
                     Integer value indicating the tree depth of the code block the node resides in
 
                 Returns
@@ -273,6 +295,13 @@ class AST_Loop(AST_Node):
 
 #todo implement in runner
 class AST_Label(AST_Node):
+    """ A class used for labels. These classes will function as a spot in the code where you can jump to
+
+            Attributes
+            ----------
+            label_number : Int
+                The number of the step in the recipe
+        """
     def __init__(self):
         """ Initialize the object and sets the type using the innit of its superclass
         """
@@ -444,8 +473,8 @@ class AST_Function(AST_Node):
         """
         super().__init__("AST_Function")
         self.name: str = None
-        self.argumentList: [AST_FunctionArgument] = None
-        self.CodeSequence: [AST_Node] = None
+        self.argumentList: List[AST_FunctionArgument] = None
+        self.CodeSequence: List[AST_Node] = None
         self.ReturnType: str = None
 
     def __str__(self, index: int=0) -> str:
@@ -592,7 +621,7 @@ class AST_Program:
         """Initialize the object
         """
         self.Functions: {AST_Function} = {}
-        self.CodeSequence: [AST_Node] = []
+        self.CodeSequence: List[AST_Node] = []
 
     def __str__(self, index: int=0) -> str:
         """ Returns a string version of the object and je subnodes of the object
@@ -607,12 +636,9 @@ class AST_Program:
                 str
                     A string version of the object and its subnodes
         """
-        return "Functions: \n" + stringify(self.Functions.values(), index) + \
+        return "Functions: \n" + stringify(list(self.Functions.values()), index) + \
                "\n" + " \nCode: \n" + \
                stringify(self.CodeSequence, index)
-
-
-
 
 
 # stringifyCode :: AST_Node → Int → String
@@ -656,12 +682,12 @@ def returnFunc(func: AST_Function, index: int=0) -> str:
 
 
 # rec_str :: [AST_Node] → Int → String
-def stringify(values: [AST_Node], index: int) -> str:
+def stringify(values: List[AST_Node], index: int) -> str:
     """ Creates a string of a list of Nodes using the stringifyCode and rec_string functions
 
             Parameters
             ----------
-            values : [AST_Node]
+            values : List[AST_Node]
                 A list of AST nodes
 
             index : int
