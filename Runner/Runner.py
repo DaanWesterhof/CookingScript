@@ -2,6 +2,7 @@ from Parser.AST_Nodes import *
 from Parser.Operators import *
 from Definitions import *
 from typing import *
+from ErrorHandler.ErrorHandler import *
 
 
 class running_context():
@@ -245,7 +246,7 @@ def evaluate_add(left_node: AST_Literal, right_node: AST_Literal) -> Union[AST_L
     elif isinstance(left_node, AST_String) and isinstance(right_node, AST_String):
         return AST_String(left_node.value + right_node.value)
     else:
-        return None
+        throw_error_runtime("ExpectTypes", ["litre", "litre"], ["cheese", "cheese"], [left_node.type, right_node.type])
 
 
 # evaluate_min :: AST_Integer → AST_Integer → AST_Integer
@@ -272,7 +273,7 @@ def evaluate_min(left_node: AST_Integer, right_node: AST_Integer) -> AST_Integer
             val = 0
         return AST_Integer(val)
     else:
-        return None
+        throw_error_runtime("ExpectType", ["litre", "litre"], [left_node.type, right_node.type])
 
 
 # evaluate_devide :: AST_Integer → AST_Integer → AST_Integer
@@ -296,7 +297,7 @@ def evaluate_devide(left_node: AST_Integer, right_node: AST_Integer) -> AST_Inte
     if isinstance(left_node, AST_Integer) and isinstance(right_node, AST_Integer):
         return AST_Integer(int(left_node.value / right_node.value))
     else:
-        return None
+        throw_error_runtime("ExpectType", ["litre", "litre"], [left_node.type, right_node.type])
 
 
 # evaluate_multiply :: AST_Literal → AST_Literal → AST_Literal
@@ -323,18 +324,18 @@ def evaluate_multiply(left_node: AST_Literal, right_node: AST_Literal) -> Option
     elif isinstance(left_node, AST_String) and isinstance(right_node, AST_Integer) or isinstance(left_node, AST_Integer) and isinstance(right_node, AST_String):
         return AST_String(left_node.value * right_node.value)
     else:
-        return None
+        throw_error_runtime("ExpectTypes", "litre", "cheese", left_node.type, right_node.type)
 
 
 def smart_equals(f: Callable) -> AST_Bool:
     def inner(a: AST_Literal, b: AST_Literal) -> AST_Bool:
         if ((type(a) is type(b)) and (
-                isinstance(a, AST_Bool) or isinstance(b, AST_Integer))) or (
+                isinstance(a, AST_Bool) or isinstance(a, AST_Integer))) or (
                 isinstance(a, AST_Bool) and isinstance(b, AST_Integer)) or (
                 isinstance(a, AST_Integer) and isinstance(b, AST_Bool)):
             return f(a, b)
         else:
-            return None
+            throw_error_runtime("ExpectType", ["litre", "egg"], [a.type, b.type])
     return inner
 
 
@@ -493,6 +494,7 @@ def add_arguments_to_context(argument_list: List[AST_Node], args: List[AST_Liter
             new_var: AST_Variable = AST_Variable()
             new_var.value = args[index].value
             new_var.name = argument_list[index].name
+            new_var.type = argument_list[index].type
             new_var.node_type = argument_list[index].type
             context[-1].variables[argument_list[index].name] = new_var
             return add_arguments_to_context(argument_list, args, context, index + 1)
@@ -500,7 +502,7 @@ def add_arguments_to_context(argument_list: List[AST_Node], args: List[AST_Liter
             new_var: AST_Variable = AST_Variable()
             new_var.value = args[index]
             new_var.name = argument_list[index].name
-            new_var.node_type = argument_list[index].type
+            new_var.type = argument_list[index].type
             context[-1].variables[argument_list[index].name] = new_var
             return add_arguments_to_context(argument_list, args, context, index+1)
 
@@ -542,6 +544,8 @@ def evaluate_tree(tree: AST_Node, ast_main: AST_Program, context: List[running_c
             var, index = find_value_in_context_list(tree.name, context)
             if var is not None:
                 return var.value[evaluate_tree(tree.node, ast_main, context)[0].value], context
+            else:
+                throw_error_runtime("UnknownVar", tree.name)
 
         else:
             var, index = find_value_in_context_list(tree.name, context)
@@ -550,6 +554,8 @@ def evaluate_tree(tree: AST_Node, ast_main: AST_Program, context: List[running_c
                     return var, context
                 else:
                     return var.value, context
+            else:
+                throw_error_runtime("UnknownVar", tree.name)
 
     elif isinstance(tree, AST_FunctionCallExecution):
         val, ind = find_value_in_context_list(tree.name, context)
@@ -560,8 +566,7 @@ def evaluate_tree(tree: AST_Node, ast_main: AST_Program, context: List[running_c
 
         else:
             #todo throw error
-            print("the amount of passed arguments is not the same as the expected amount")
-            exit()
+            throw_error_runtime("ArgumentCount", len(ast_main.Functions[val.FunctionName].argumentList), len(val.value.argument_nodes))
 
         val, bad_context = executingCodeBlock(ast_main.Functions[val.FunctionName].CodeSequence, 0, ast_main, new_context)
         return val, context
@@ -576,9 +581,14 @@ def evaluate_tree(tree: AST_Node, ast_main: AST_Program, context: List[running_c
                 elif isinstance(val, AST_Integer):
                     tree.left.length = val.value
                     tree.left.value = [AST_Integer(0)] * val.value
+                else:
+                    throw_error_runtime("WrongVariableAssignment", ["listinitializer", "litre"], tree.left.name ,val.node_type)
 
             else:
-                tree.left.value = val
+                if tree.left.type == val.type:
+                    tree.left.value = val
+                else:
+                    throw_error_runtime("WrongVariableAssignment", tree.left.type, tree.left.name, val.type)
             context[-1].variables[tree.left.name] = tree.left
             return None, context
 
@@ -594,23 +604,32 @@ def evaluate_tree(tree: AST_Node, ast_main: AST_Program, context: List[running_c
 
             else:
                 var, ind = find_value_in_context_list(tree.left.name, context)
+                if var is None:
+                    throw_error_runtime("UnknownVar", tree.left.name)
                 val, context = evaluate_tree(tree.right, ast_main, context)
+                if val is None:
+                    throw_error_runtime("WrongVariableAssignment", "value", tree.left.name ,"None")
 
                 if isinstance(var, AST_List):
                     if isinstance(val, AST_ArgumentList):
                         if len(val.argument_nodes) == var.length:
                             var.value = evaluate_argument_list(val.argument_nodes, ast_main, context)
                         else:
-                            pass  # throw error not same length
+                            throw_error_runtime("WrongListLength", var.length, len(val.argument_nodes))
                     elif isinstance(val, AST_Integer):
                         var.length = val.value
                         var.value = [AST_Integer(0)] * val.value
                     elif isinstance(val, AST_List):
                         var.length = val.length
                         var.value = val.value
+                    elif isinstance(val, list):
+                        var.length = len(val)
+                        var.value = val
                     else:
-                        pass  # throw error cant assign regular value to argument list, use []
+                        throw_error_runtime("ExpectType", ["groceries", "int", "initializerlist"], val.node_type)
                 else:
+                    if var.type != val.type:
+                        throw_error_runtime("WrongVariableAssignment", var.type, tree.left.name, val.type)
                     var.value = val
                 context[ind].variables[tree.left.name] = var
             return None, context
@@ -620,6 +639,9 @@ def evaluate_tree(tree: AST_Node, ast_main: AST_Program, context: List[running_c
             tree.left.value = val
             context[-1].variables[tree.left.name] = tree.left
             return None, context
+
+        else:
+            throw_error_runtime("ExpectBeforeInstead", ["groceries", "int", "initializerlist"], tree.operator, val.node_type)
 
     elif isinstance(tree, AST_Operator):
         val_l: AST_Literal

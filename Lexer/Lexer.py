@@ -27,16 +27,20 @@ def validateForString(tokens: List[str], last_token: str) -> bool:
                 return True
     return False
 
-# assignTypes :: [String] → String → [LEX_Type]
-def assignTypes(tokens: [str], last_token: str=None) -> [LEX_Type]:
+# assignTypes :: String → [String] → String → Int → [LEX_Type]
+def assignTypes(file_name: str, tokens: [str], last_token: str=None, line_count: int=1) -> [LEX_Type]:
     """Assigns the right LEX_Type to the string and adds it to the list in the correct order
 
             Parameters
             ----------
-            tokens : [str]
+            file_name : String
+                The name of the file currently being lexed
+            tokens : [String]
                 A list of strings
             last_token : str, optional
                 The last token that was assigned a type
+            line_count : Int
+                Integer that tells wich line is being lexed
 
             Returns
             -------
@@ -46,34 +50,34 @@ def assignTypes(tokens: [str], last_token: str=None) -> [LEX_Type]:
     if len(tokens) == 0:
         return []
     if validateForString(tokens, last_token):
-        return [LEX_String(tokens[0])] + assignTypes(tokens[2:], tokens[0])
+        return [LEX_String(tokens[0], file_name, line_count)] + assignTypes(file_name, tokens[2:], tokens[0], line_count)
     elif tokens[0] == '"':
-        return assignTypes(tokens[1:], tokens[0])
+        return assignTypes(file_name, tokens[1:], tokens[0], line_count)
     elif tokens[0] in keywordslist:
-        return [LEX_Keyword(tokens[0])] + assignTypes(tokens[1:], tokens[0])
+        return [LEX_Keyword(tokens[0], file_name, line_count)] + assignTypes(file_name, tokens[1:], tokens[0], line_count)
     elif tokens[0] in typeList:
-        return [LEX_Types(tokens[0])] + assignTypes(tokens[1:], tokens[0])
+        return [LEX_Types(tokens[0], file_name, line_count)] + assignTypes(file_name, tokens[1:], tokens[0], line_count)
     elif tokens[0] == '=':
-        return [LEX_AssignmentOperator(tokens[0])] + assignTypes(tokens[1:], tokens[0])
+        return [LEX_AssignmentOperator(tokens[0],  file_name,line_count)] + assignTypes(file_name, tokens[1:], tokens[0], line_count)
     elif tokens[0] == '-' and last_token == '\n':
-        return [LEX_ItemLister(tokens[0])] + assignTypes(tokens[1:], tokens[0])
+        return [LEX_ItemLister(tokens[0],  file_name, line_count)] + assignTypes(file_name, tokens[1:], tokens[0], line_count)
     elif tokens[0] in "+-/*":
-        return [LEX_Operator(tokens[0])] + assignTypes(tokens[1:], tokens[0])
+        return [LEX_Operator(tokens[0], file_name, line_count)] + assignTypes(file_name, tokens[1:], tokens[0], line_count)
     elif tokens[0] == '(' or tokens[0] == ')':
-        return [LEX_Bracket(tokens[0])] + assignTypes(tokens[1:], tokens[0])
+        return [LEX_Bracket(tokens[0], file_name, line_count)] + assignTypes(file_name, tokens[1:], tokens[0], line_count)
     elif tokens[0] in RelationalOperator:
-        return [LEX_RelationalOperator(tokens[0])] + assignTypes(tokens[1:], tokens[0])
+        return [LEX_RelationalOperator(tokens[0], file_name, line_count)] + assignTypes(file_name, tokens[1:], tokens[0], line_count)
     elif tokens[0] in [':', ',', '.', '->', '[', ']', '{', '}']:
-        return [LEX_Other(tokens[0])] + assignTypes(tokens[1:], tokens[0])
+        return [LEX_Other(tokens[0], file_name, line_count)] + assignTypes(file_name, tokens[1:], tokens[0], line_count)
     elif tokens[0] == '\n':
-        return [LEX_LineEnd(tokens[0])] + assignTypes(tokens[1:], tokens[0])
+        return [LEX_LineEnd(tokens[0], file_name, line_count)] + assignTypes(file_name, tokens[1:], tokens[0], line_count+1)
     elif tokens[0].isnumeric():
-        return [LEX_Numerical(tokens[0])] + assignTypes(tokens[1:], tokens[0])
+        return [LEX_Numerical(tokens[0], file_name, line_count)] + assignTypes(file_name, tokens[1:], tokens[0], line_count)
     elif tokens[0] == true_keyword or tokens[0] == false_keyword:
-        return [LEX_Bool(tokens[0])] + assignTypes(tokens[1:], tokens[0])
+        return [LEX_Bool(tokens[0], file_name, line_count)] + assignTypes(file_name, tokens[1:], tokens[0], line_count)
     elif tokens[0].isalnum() or (tokens[0][0] == '$' and tokens[0][1:].isalnum()):
-        return [LEX_Identifier(tokens[0])] + assignTypes(tokens[1:], tokens[0])
-    return assignTypes(tokens[1:], tokens[0])
+        return [LEX_Identifier(tokens[0], file_name, line_count)] + assignTypes(file_name, tokens[1:], tokens[0], line_count)
+    return assignTypes(file_name, tokens[1:], tokens[0], line_count)
 
 
 # subsplit :: [String] → [String]
@@ -170,42 +174,6 @@ def fixStrings(tokens: [str]) -> [str]:
     else:
         return []
 
-# these are the head tokanizer/lexer funtions, might put them together
-
-
-
-#todo fix this guz its nicer
-def add_escaped_char(tokens):
-    if len(tokens) > 1:
-        return tokens[0], tokens[0]
-    else:
-        print("hey we were in the middle of a string and it ended?")
-
-
-def fix_string(tokens) -> (str, [str]):
-    if len(tokens) == 0 or tokens[0] == '"':
-        return "", tokens
-    elif tokens[0][-1] == '\\': #its an escape character
-        char, rest = add_escaped_char(tokens[1:])
-        string, rest = fix_string(rest[1:])
-        return char + string, rest
-    else:
-        string, rest = fix_string(tokens[1:])
-        return tokens[0] + string, rest
-
-
-def fix_the_strings(tokens) -> [str]:
-    if len(tokens) > 0:
-        if tokens[0] == '"':
-            string, rest = fix_string(tokens[1:])
-            return [string] + fix_the_strings(rest[1:])
-        elif tokens[0] == ' ':
-            return fix_the_strings(tokens[1:])
-        else:
-            return [tokens[0]] + fix_the_strings(tokens[1:])
-    else:
-        return []
-
 
 # tokanizer :: String → [String]
 def tokanizer(input_str: str) -> [str]:
@@ -242,5 +210,5 @@ def lexer(file_name: str) -> [LEX_Type]:
     """
     f = open(file_name, "r")
     tokens = tokanizer(f.read())
-    tokens = assignTypes(tokens)
+    tokens = assignTypes(file_name, tokens)
     return tokens

@@ -52,7 +52,7 @@ class AST_ArgumentList(AST_Node):
     def __init__(self):
         """ Initialize the object and sets the type using the innit of its superclass
         """
-        super().__init__("AST_ArgumentList")
+        super().__init__("ArgumentList")
         self.argument_nodes: List[AST_Node] = []
 
     def __str__(self, index: int=0) -> str:
@@ -93,7 +93,7 @@ class AST_FunctionArgument(AST_Node):
                     The name of the argument
 
         """
-        super().__init__("AST_FunctionArgument")
+        super().__init__("FunctionArgument")
         self.type: str = type
         self.name: str = name
 
@@ -131,10 +131,10 @@ class AST_Variable(AST_Node):
     def __init__(self):
         """  Initialize the object and sets the type using the innit of its superclass
         """
-        super().__init__("AST_Variable")
+        super().__init__("Variable")
         self.name: str = None
         self.value: AST_Node = None
-        self.type: str = None
+        self.type: str = "bla"
 
     def __str__(self, index: int=0) -> str:
         """ Returns a string version of the object and je subnodes of the object
@@ -149,7 +149,7 @@ class AST_Variable(AST_Node):
                 str
                     A string version of the object and its subnodes
         """
-        return "Variable( " + self.name + ": " + self.type + ": " + self.value.__str__() + ")"
+        return "Variable( " + self.name + ": " + self.type + ": (" + self.value.__str__() + "))"
 
 
 class AST_VariableReference(AST_Node):
@@ -169,7 +169,7 @@ class AST_VariableReference(AST_Node):
                 The name of the variable
 
         """
-        super().__init__("AST_VariableReference")
+        super().__init__("VariableReference")
         self.name: str = variable_name
 
     def __str__(self, index: int=0) -> str:
@@ -240,7 +240,7 @@ class AST_IfStatement(AST_Node):
     def __init__(self):
         """ Initialize the object and sets the type using the innit of its superclass
         """
-        super().__init__("AST_IfStatement")
+        super().__init__("IfStatement")
         self.CodeSequence: List[AST_Node] = None
         self.condition: AST_Node = None
 
@@ -273,7 +273,7 @@ class AST_Loop(AST_Node):
     def __init__(self):
         """ Initialize the object and sets the type using the innit of its superclass
         """
-        super().__init__("AST_Loop")
+        super().__init__("Loop")
         self.CodeSequence: List[AST_Node] = None
         self.condition: AST_Node = None
 
@@ -305,7 +305,7 @@ class AST_Label(AST_Node):
     def __init__(self):
         """ Initialize the object and sets the type using the innit of its superclass
         """
-        super().__init__("AST_Label")
+        super().__init__("Label")
         self.label_number = None
 
 
@@ -320,7 +320,7 @@ class AST_ReturnStatement(AST_Node):
     def __init__(self):
         """ Initialize the object and sets the type using the innit of its superclass
         """
-        super().__init__("AST_ReturnStatement")
+        super().__init__("ReturnStatement")
         self.value: AST_Node = None
 
     def __str__(self, index: int=0) -> str:
@@ -357,7 +357,7 @@ class AST_FunctionVariable(AST_Node):
     def __init__(self):
         """ Initialize the object and sets the type using the innit of its superclass
         """
-        super().__init__("AST_FunctionVariable")
+        super().__init__("FunctionVariable")
         self.name: str = None
         self.FunctionName: str = None
         self.value: AST_ArgumentList = None
@@ -386,7 +386,7 @@ class AST_FunctionCallExecution(AST_Node):
         name : str
             A string that is the name of the variable
     """
-    def __init__(self, ast_type: str="AST_FunctionExecution"):
+    def __init__(self, ast_type: str="FunctionExecution"):
         """ Initialize the object and set its values
 
             Parameters
@@ -431,7 +431,7 @@ class AST_PrintFunctionCall(AST_FunctionCallExecution):
                 The nodes of which the evaluated value should be printed to the console
 
         """
-        super().__init__("AST_PrintFunctionCall")
+        super().__init__("PrintFunctionCall")
         self.ParameterValues: AST_ArgumentList = args
 
     def __str__(self, index: int=0) -> str:
@@ -471,7 +471,7 @@ class AST_Function(AST_Node):
     def __init__(self):
         """Initialize the object and sets the type using the innit of its superclass
         """
-        super().__init__("AST_Function")
+        super().__init__("Function")
         self.name: str = None
         self.argumentList: List[AST_FunctionArgument] = None
         self.CodeSequence: List[AST_Node] = None
@@ -560,7 +560,7 @@ class AST_Integer(AST_Literal):
                 The value to be stored by the node
 
         """
-        super().__init__("Integer", "AST_Integer", str(value))
+        super().__init__("litre", "Integer", str(value))
         self.value: int = value
 
 
@@ -581,7 +581,7 @@ class AST_Bool(AST_Literal):
                 The value to be stored by the node
 
         """
-        super().__init__("Bool", "AST_Bool", str(bool))
+        super().__init__("egg", "Bool", str(bool))
         self.value: bool = value
 
 
@@ -602,7 +602,7 @@ class AST_String(AST_Literal):
                 The value to be stored by the node
 
         """
-        super().__init__("String", "AST_String", value)
+        super().__init__("cheese", "String", value)
         self.value: str = value
 
 
@@ -698,6 +698,9 @@ def stringify(values: List[AST_Node], index: int) -> str:
             str
                 A long string made form all the string versions of nodes in the values list
     """
-    return reduce(lambda x, y: x+y, list(map(functools.partial(stringifyCode, index=index + 1), values)))
+    if len(values) > 0:
+        return reduce(lambda x, y: x+y, list(map(functools.partial(stringifyCode, index=index + 1), values)))
+    else:
+        return ""
 
 

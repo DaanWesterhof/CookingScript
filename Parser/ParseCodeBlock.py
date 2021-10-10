@@ -2,6 +2,7 @@ from Parser.AST_Nodes import *
 from Parser.Operators import *
 from Lexer.LEX_Tokens import *
 from typing import *
+from ErrorHandler.ErrorHandler import *
 import operator
 
 
@@ -64,7 +65,6 @@ def parseCodeLine(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Pr
     else:
 
         if isinstance(tokens[0], LEX_Operator):
-
             return tuple(map(operator.add, ([], [AST_OperatorExpression(tokens[0].value)], []), parseCodeLine(tokens[1:], tokens[0], ast_main, delimiters)))
         if isinstance(tokens[0], LEX_RelationalOperator):
             return tuple(map(operator.add, ([], [AST_RelationalOperators(tokens[0].value)], []), parseCodeLine(tokens[1:], tokens[0], ast_main, delimiters)))
@@ -122,6 +122,8 @@ def parseCodeLine(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Pr
                     val: AST_ArgumentList
                     rest: List[LEX_Type]
                     val, rest = parseArgumentList(tokens[2:], tokens[1], ast_main)
+                    if val.argument_nodes[0] is None:
+                        throw_error("MissingParameters", last_token.file, last_token.line, tokens[0].value)
                     return tuple(map(operator.add, ([val], [], []), parseCodeLine(rest, rest[0], ast_main, delimiters)))
             else:
                 return tuple(
@@ -381,11 +383,15 @@ def parseWeigh(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Progr
             rest: List[LEX_Type]
             codeblock: List[AST_Node]
             cond, rest = getNodeFromLine(tokens[1:], tokens[0], ast_main, (')',))
+            if cond is None:
+                throw_error("ExpectedAfter", last_token.file, last_token.line, "condition", last_token.value)
             codeblock, rest = createCodeBlock(rest[1:], rest[0], ast_main)
             ifs: AST_IfStatement = AST_IfStatement()
             ifs.CodeSequence = codeblock
             ifs.condition = cond
             return ifs, rest
+        else:
+            throw_error("ExpectedAfterInstead", last_token.file, last_token.line, "(", last_token.value, tokens[0].value)
 
 
 # parseMix :: [LEX_Type] → LEX_Type  → AST_Program → (AST_Loop, [LEX_Type])
@@ -419,11 +425,15 @@ def parseMix(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Program
             rest: List[LEX_Type]
             codeblock: List[AST_Node]
             cond, rest = getNodeFromLine(tokens[1:], tokens[0], ast_main, (')',))
+            if cond is None:
+                throw_error("ExpectedAfter", last_token.file, last_token.line, "condition", last_token.value)
             codeblock, rest = createCodeBlock(rest[1:], rest[0], ast_main)
             loop: AST_Loop = AST_Loop()
             loop.CodeSequence = codeblock
             loop.condition = cond
             return loop, rest
+        else:
+            throw_error("ExpectedAfterInstead", last_token.file, last_token.line, "(", last_token.value, tokens[0].value)
 
 
 # parseStep :: [LEX_Type] → LEX_Type  → AST_Program → (AST_Label, [LEX_Type])
@@ -491,7 +501,11 @@ def parseTaste(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Progr
             args: AST_ArgumentList
             lex_tokens: List[LEX_Type]
             args, lex_tokens = parseArgumentList(tokens[1:], tokens[0], ast_main)
+            if args.argument_nodes[0] is None:
+                throw_error("MissingParameters", last_token.file, last_token.line, last_token.value)
             return AST_PrintFunctionCall(args), lex_tokens
+        else:
+            throw_error("ExpectedAfterInstead", last_token.file, last_token.line, "(", last_token.value, tokens[0].value)
 
 
 # parseServe :: [LEX_Type] → LEX_Type  → AST_Program → (AST_ReturnStatement, [LEX_Type])
@@ -522,6 +536,8 @@ def parseServe(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Progr
         node: AST_ReturnStatement = AST_ReturnStatement()
         rest: List[LEX_Type]
         node.value, rest = getNodeFromLine(tokens, last_token, ast_main, ('\n',))
+        if node.value is None:
+            throw_error("ExpectedAfter", last_token.file, last_token.line, "ReturnValue", last_token.value)
         return node, rest
 
 
@@ -572,6 +588,8 @@ def parseVariableCreation(tokens: List[LEX_Type], last_token: LEX_Type, ast_main
                 vals, ops, rest = parseCodeLine(tokens[1:], tokens[0], ast_main, ('\n',))
                 vals = [var] + vals
                 return fill(vals, construct(ops)), rest
+        else:
+            throw_error("ExpectedAfterInstead", tokens[0].file, tokens[0].line, last_token.value, "Identifier", tokens[0].type)
 
 
 # parseFunctionVariable :: [LEX_Type] → LEX_Type → AST_Program → (AST_FunctionVariable, [LEX_Type])
@@ -609,6 +627,11 @@ def parseFunctionVariable(tokens: List[LEX_Type], last_token: LEX_Type, ast_main
             vals, ops, rest = parseCodeLine(tokens[1:], tokens[0], ast_main, ('\n',))
             vals = [var] + vals
             return fill(vals, construct(ops)), rest
+        else:
+            throw_error("ExpectType", tokens[0].file, tokens[0].line, "Identifier", tokens[0].type)
+    else:
+        throw_error("UnknownFunction", last_token.file, last_token.line, last_token.value)
+
 
 
 # createCodeBlock :: [LEX_Type] → LEX_Type → AST_Program → ([AST_Node], [LEX_Type])
@@ -636,10 +659,12 @@ def createCodeBlock(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_
 
     """
     if len(tokens) == 0 or tokens[0].value == "done": #or isinstance(tokens, LEX_CodeBlockEnd)
+        if len(tokens) == 0:
+            throw_error("ExpectedBefore", last_token.file, last_token.line, "done", "EOF")
         return [], tokens
     elif isinstance(tokens[0], LEX_Keyword) and (tokens[0].value != "bake" or tokens[0].value != "prepare"):
-        if tokens[0].value == "recipe" or tokens[0].value == "->":
-            pass #todo fix this
+        if tokens[0].value in non_code_keywords:
+            throw_error_with_token("UnexpectedKeyword", tokens[0])
         elif tokens[0].value == "weigh":
             node: AST_IfStatement
             rest: List[LEX_Type]
@@ -689,14 +714,17 @@ def createCodeBlock(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_
         seq, rest = createCodeBlock(rest[1:], rest[0], ast_main)
         seq.insert(0, node)
         return seq, rest
-    elif tokens[0].value in ast_main.Functions: #todo gotta get this to work
-        node: AST_FunctionVariable
-        rest: List[LEX_Type]
-        node, rest = parseFunctionVariable(tokens[1:], tokens[0], ast_main)
-        seq: List[AST_Node]
-        seq, rest = createCodeBlock(rest[1:], rest[0], ast_main)
-        seq.insert(0, node)
-        return seq, rest
+    elif isinstance(tokens[0], LEX_Identifier) and isinstance(tokens[1], LEX_Identifier):
+        if tokens[0].value in ast_main.Functions: #todo gotta get this to work
+            node: AST_FunctionVariable
+            rest: List[LEX_Type]
+            node, rest = parseFunctionVariable(tokens[1:], tokens[0], ast_main)
+            seq: List[AST_Node]
+            seq, rest = createCodeBlock(rest[1:], rest[0], ast_main)
+            seq.insert(0, node)
+            return seq, rest
+        else:
+            throw_error("UnknownFunction", tokens[0].file, tokens[0].line, tokens[0].value)
     elif isinstance(tokens[0], LEX_LineEnd):
         return createCodeBlock(tokens[1:], tokens[0], ast_main)
     else:

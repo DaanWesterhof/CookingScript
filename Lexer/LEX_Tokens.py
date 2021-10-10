@@ -7,8 +7,12 @@ class LEX_Type:
             The value of the token
         type : str
             The type of the token
+        line:
+            The location of the token in a file
+        file_name:
+            The name of the file where the token is found
     """
-    def __init__(self, value: str):
+    def __init__(self, value: str, file_name: str, line: int):
         """ Initialize the object and sets the correct type
 
                 Parameters
@@ -19,6 +23,8 @@ class LEX_Type:
         """
         self.value: str = value
         self.type: str = "BasicToken"
+        self.line: int = line
+        self.file: str = file_name
 
     def __str__(self) -> str:
         """ Returns a string version of the object
@@ -41,7 +47,7 @@ class LEX_Keyword(LEX_Type):
         type : str
             The type of the token
     """
-    def __init__(self, value: str):
+    def __init__(self, value: str, file_name: str, line: int):
         """ Initialize the object and sets the correct type
 
                 Parameters
@@ -50,7 +56,7 @@ class LEX_Keyword(LEX_Type):
                     The value of the token
 
         """
-        super().__init__(value)
+        super().__init__(value, file_name, line)
         self.type: str = "Keyword"
 
 
@@ -64,7 +70,7 @@ class LEX_Types(LEX_Type):
         type : str
             The type of the token
     """
-    def __init__(self, value: str):
+    def __init__(self, value: str, file_name: str, line: int):
         """ Initialize the object and sets the correct type
 
                 Parameters
@@ -73,7 +79,7 @@ class LEX_Types(LEX_Type):
                     The value of the token
 
         """
-        super().__init__(value)
+        super().__init__(value, file_name, line)
         self.type: str = "Type"
 
 
@@ -87,7 +93,7 @@ class LEX_Identifier(LEX_Type):
         type : str
             The type of the token
     """
-    def __init__(self, value: str):
+    def __init__(self, value: str, file_name: str, line: int):
         """ Initialize the object and sets the correct type
 
                 Parameters
@@ -96,7 +102,7 @@ class LEX_Identifier(LEX_Type):
                     The value of the token
 
         """
-        super().__init__(value)
+        super().__init__(value, file_name, line)
         self.type: str = "Identifier"
 
 
@@ -110,7 +116,7 @@ class LEX_Operator(LEX_Type):
         type : str
             The type of the token
     """
-    def __init__(self, value: str):
+    def __init__(self, value: str, file_name: str, line: int):
         """ Initialize the object and sets the correct type
 
                 Parameters
@@ -119,7 +125,7 @@ class LEX_Operator(LEX_Type):
                     The value of the token
 
         """
-        super().__init__(value)
+        super().__init__(value, file_name, line)
         self.type: str = "Operator"
 
 
@@ -133,7 +139,7 @@ class LEX_RelationalOperator(LEX_Type):
         type : str
             The type of the token
     """
-    def __init__(self, value: str):
+    def __init__(self, value: str, file_name: str, line: int):
         """ Initialize the object and sets the correct type
 
                 Parameters
@@ -142,7 +148,7 @@ class LEX_RelationalOperator(LEX_Type):
                     The value of the token
 
         """
-        super().__init__(value)
+        super().__init__(value, file_name, line)
         self.type: str = "RelationalOperator"
 
 
@@ -156,7 +162,7 @@ class LEX_AssignmentOperator(LEX_Type):
         type : str
             The type of the token
     """
-    def __init__(self, value: str):
+    def __init__(self, value: str, file_name: str, line: int):
         """ Initialize the object and sets the correct type
 
                 Parameters
@@ -165,7 +171,7 @@ class LEX_AssignmentOperator(LEX_Type):
                     The value of the token
 
         """
-        super().__init__(value)
+        super().__init__(value, file_name, line)
         self.type: str = "AsignmentOperator"
 
 
@@ -179,7 +185,7 @@ class LEX_Bracket(LEX_Type):
         type : str
             The type of the token
     """
-    def __init__(self, value: str):
+    def __init__(self, value: str, file_name: str, line: int):
         """ Initialize the object and sets the correct type
 
                 Parameters
@@ -188,7 +194,7 @@ class LEX_Bracket(LEX_Type):
                     The value of the token
 
         """
-        super().__init__(value)
+        super().__init__(value, file_name, line)
         self.type: str = "Bracket"
 
 
@@ -202,7 +208,7 @@ class LEX_Primitive(LEX_Type):
         type : str
             The type of the token
     """
-    def __init__(self, value: str):
+    def __init__(self, value: str, file_name: str, line: int):
         """ Initialize the object and sets the correct type
 
                 Parameters
@@ -211,7 +217,7 @@ class LEX_Primitive(LEX_Type):
                     The value of the token
 
         """
-        super().__init__(value)
+        super().__init__(value, file_name, line)
         self.type: str = "Primitive"
 
 class LEX_Bool(LEX_Primitive):
@@ -224,7 +230,7 @@ class LEX_Bool(LEX_Primitive):
         type : str
             The type of the token
     """
-    def __init__(self, value: str):
+    def __init__(self, value: str, file_name: str, line: int):
         """ Initialize the object and sets the correct type
 
                 Parameters
@@ -233,7 +239,7 @@ class LEX_Bool(LEX_Primitive):
                     The value of the token
 
         """
-        super().__init__(value)
+        super().__init__(value, file_name, line)
         self.subtype: str = "Bool"
 
 
@@ -247,8 +253,8 @@ class LEX_Numerical(LEX_Primitive):
         type : str
             The type of the token
     """
-    def __init__(self, value: str):
-        super().__init__(value)
+    def __init__(self, value: str, file_name: str, line: int):
+        super().__init__(value, file_name, line)
         self.subtype: str = "Number"
 
 
@@ -262,8 +268,8 @@ class LEX_String(LEX_Primitive):
         type : str
             The type of the token
     """
-    def __init__(self, value: str):
-        super().__init__(value)
+    def __init__(self, value: str, file_name: str, line: int):
+        super().__init__(value, file_name, line)
         self.subtype: str = "String"
 
 
@@ -277,8 +283,8 @@ class LEX_Other(LEX_Type):
         type : str
             The type of the token
     """
-    def __init__(self, value: str):
-        super().__init__(value)
+    def __init__(self, value: str, file_name: str, line: int):
+        super().__init__(value, file_name, line)
         self.type: str = "Other"
 
 
@@ -292,8 +298,8 @@ class LEX_LineEnd(LEX_Type):
         type : str
             The type of the token
     """
-    def __init__(self, value: str):
-        super().__init__(value)
+    def __init__(self, value: str, file_name: str, line: int):
+        super().__init__(value, file_name, line)
         self.type: str = "LineEnd"
 
 
@@ -307,6 +313,6 @@ class LEX_ItemLister(LEX_Type):
         type : str
             The type of the token
     """
-    def __init__(self, value: str):
-        super().__init__(value)
+    def __init__(self, value: str, file_name: str, line: int):
+        super().__init__(value, file_name, line)
         self.type: str = "ItemLister"

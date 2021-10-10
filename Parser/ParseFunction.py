@@ -1,6 +1,7 @@
 from Parser.Operators import *
 from Lexer.LEX_Tokens import *
 from Parser.ParseCodeBlock import *
+from ErrorHandler.ErrorHandler import *
 from typing import *
 
 
@@ -111,8 +112,7 @@ def parseFunction(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Pr
                 exit()
             return func, rest_tokens, final_token, ast_main
         else:
-            print("missing_identifier")
-            exit()
+            throw_error_with_token("MissingIdentifier", tokens[0])
     elif last_token.type == "Identifier":
         if tokens[0].value == "->":
             if tokens[1].type == "Type":
@@ -123,11 +123,9 @@ def parseFunction(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Pr
                 func.ReturnType = tokens[1].value
                 return func, rest_tokens, final_token, ast_main
             else:
-                print("expected return type")
-                exit()
+                throw_error_with_token("ExpectedReturnType", tokens[1])
         else:
-            print("expected \"->\" after identifier")
-            exit()
+            throw_error_with_token("ExpectedArrow", tokens[0])
     elif tokens[0].type == "Keyword":
         if tokens[0].value == "prepare":
             if last_token.type == "LineEnd":
@@ -135,12 +133,15 @@ def parseFunction(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Pr
                     arguments: List[AST_FunctionArgument]
                     rest_tokens: List[LEX_Type]
                     arguments, rest_tokens = getFunctionArguments(tokens[2:], last_token)
+                    if len(arguments) == 0:
+                        throw_error("ExpectedAfter", tokens[0].file, tokens[0].line, "FunctionArguments", tokens[0].value)
                     func, rest_tokens, final_token, ast_main = parseFunction(rest_tokens[1:], rest_tokens[0], ast_main)
                     func.argumentList = arguments
                     return func, rest_tokens, final_token, ast_main
                 else:
-                    print("expected \":\" after \"Prepare\"")
-                    exit()
+                    throw_error("ExpectedAfter", tokens[0].file, tokens[0].line, ":", tokens[0].value)
+            else:
+                throw_error("ExpectedBefore", tokens[0].file, tokens[0].line, "LineEnd", tokens[0].value)
         elif tokens[0].value == "bake":
             if last_token.type == "LineEnd":
                 if tokens[1].value == ":":
@@ -149,12 +150,12 @@ def parseFunction(tokens: List[LEX_Type], last_token: LEX_Type, ast_main: AST_Pr
                     rest_tokens: List[LEX_Type]
                     code, rest_tokens = createCodeBlock(tokens[2:], tokens[1], ast_main)
                     func.CodeSequence = code
+                    if len(code) == 0:
+                        throw_error("CodeBlockEmpty", tokens[1].file, tokens[1].line, tokens[1].value)
                     return func, rest_tokens[1:], rest_tokens[0], ast_main
                 else:
-                    print("expected \":\" after Bake")
-                    exit()
+                    throw_error("ExpectedAfter", tokens[0].file, tokens[0].line, ":", tokens[0].value)
             else:
-                print("expected \"\\n\" before Bake")
-                exit()
+                throw_error("ExpectedBefore", tokens[0].file, tokens[0].line, "LineEnd", tokens[0].value)
     else:
         return parseFunction(tokens[1:], tokens[0], ast_main)
