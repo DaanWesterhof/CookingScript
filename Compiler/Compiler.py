@@ -128,12 +128,18 @@ def compileAssignment(node, var_dict, var_place):
         code_string = composeCalculation(node.right, var_dict, 0)
         return code_string + "movs    " + var_dict[node.left.name] + ", r0\n"
 
-        ldr     r3, [r7, #12]
-        cmp     r3, #29
-        bgt     .L2
+
+def getLoadString(list_var, target, index):
+    return "ldr     r{}, [r{}, #{}]".format(target, list_var, index)
 
 
-def compileLoop(node: AST_Loop, var_dict, depth, count):
+"""
+labels:
+functionname_number
+"""
+
+
+def compileLoop(node: AST_Loop, var_dict, function_name, count):
     if isinstance(node.condition, AST_RelationalOperators):
         operator_string = ""
         passable_par1 = ""
@@ -145,7 +151,8 @@ def compileLoop(node: AST_Loop, var_dict, depth, count):
         elif isinstance(node.condition.left, AST_Literal):
             passable_par1 = "#" + str(int(node.condition.left.value))
         elif isinstance(node.condition.left, AST_VariableReference):
-            passable_par1 = var_dict[node.condition.left.name]
+            operator_string += getLoadString(7, 0, var_dict[node.condition.left.name])
+            passable_par1 = "r0"
 
         if isinstance(node.condition.right, AST_Operator):
             calc_2 = composeCalculation(node.condition.right, var_dict, 0)
@@ -154,19 +161,21 @@ def compileLoop(node: AST_Loop, var_dict, depth, count):
         elif isinstance(node.condition.right, AST_Literal):
             passable_par2 = "#" + str(int(node.condition.right.value))
         elif isinstance(node.condition.right, AST_VariableReference):
-            passable_par2 = var_dict[node.condition.right.name]
-
-
+            operator_string += getLoadString(7, 0, var_dict[node.condition.left.name])
+            passable_par1 = "r1"
 
         strings = "cmp     {}, {}\n" \
-                  "{}     {}".format(passable_par1, passable_par2, comparator_operator_dict[node.condition.operator], label)#if its not good skip the loop
+                  "{}     {}".format(passable_par1, passable_par2, comparator_operator_dict[node.condition.operator], ".{}_{}".format(function_name, count))#if its not good skip the loop
     elif isinstance(node.condition, AST_Bool):
-        if node.condition.value:
-            pass #do the loop until return
+        if not node.condition.value:
+            strings = "b       {}".format(".{}_{}".format(function_name, count))
         else:
             pass #do not compile codeblock but give warning
-    else:
-
+    elif isinstance(node.condition, AST_VariableReference):
+        getvar = getLoadString(7, 0, var_dict[node.condition.name])
+        strings = "cmp     {}, {}\n" \
+                  "{}     {}".format("r0", 0, "ble",
+                                     ".{}_{}".format(function_name, count))  # if its not good skip the loop
 
     #create start loop label,
     #create condition
@@ -184,17 +193,7 @@ def count_variables(code_sequence: [AST_Node]) -> int:
         return count_variables(code_sequence[0].CodeSequence) + count_variables(code_sequence[1:])
     return count_variables(code_sequence[1:])
 
-def compileCodeBlock(code_sequence: [AST_Node], var_dict) -> str:
-        if isinstance(code_sequence[0], AST_AssignmentOperator):
-            val = compileAssignment()
-        elif isinstance(code_sequence[0], AST_Loop):
-            pass
-        elif isinstance(code_sequence[0], AST_IfStatement):
-            pass
-        elif isinstance(code_sequence[0], AST_ReturnStatement):
-            pass
-        elif isinstance(code_sequence[0], AST_PrintFunctionCall):
-            pass
+
 
 def compile_return_statement(node, var_dict):
 
