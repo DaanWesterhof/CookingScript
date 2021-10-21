@@ -17,6 +17,7 @@ error_dict = {
     "WrongListLength": " Expected list with length of '{}' got length '{}' instead",
     "ArgumentCount": " Expected '{}' arguments got '{}' arguments instead",
     "WrongVariableAssignment": " Expected value of type '{}' for variable '{}' got value of type '{}' instead",
+    "StringsCompile": " Strings are not yet supported in compile mode, found with variable: '{}'"
 }
 
 

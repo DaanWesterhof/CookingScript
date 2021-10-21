@@ -127,7 +127,6 @@ def evaluate_operator(operator, a, b) -> AST_Node:
     elif operator == "<":
         return AST_Integer(int(a < b))
 
-
 def getFreeReg(regs) -> int:
     if len(regs) == 0:
         return -12
@@ -182,93 +181,203 @@ def simplifyNode(node):
         if isinstance(left, AST_Literal) and isinstance(right, AST_Literal):
             return evaluate_operator(node.operator, left, right)
         return node
+    else:
+        return node
 
 
-def count_variables(code_sequence: [AST_Node]) -> int:
+
+#todo add more space for storing function variables
+def count_variables(ast_main, code_sequence: [AST_Node]) -> int:
     if len(code_sequence) == 0:
         return 0
     if isinstance(code_sequence[0], AST_AssignmentOperator):
-        if isinstance(code_sequence[0].left, AST_Variable):
-            return count_variables(code_sequence[1:]) + 1
+        if isinstance(code_sequence[0].left, AST_FunctionVariable):
+            return count_variables(ast_main, code_sequence[1:]) + len(ast_main.Functions[code_sequence[0].left.FunctionName].argumentList)
+        elif isinstance(code_sequence[0].left, AST_Variable):
+            return count_variables(ast_main, code_sequence[1:]) + 1
     elif isinstance(code_sequence[0], (AST_Loop, AST_IfStatement)):
-        return count_variables(code_sequence[0].CodeSequence) + count_variables(code_sequence[1:])
-    return count_variables(code_sequence[1:])
+        return count_variables(ast_main, code_sequence[0].CodeSequence) + count_variables(ast_main, code_sequence[1:])
+    return count_variables(ast_main, code_sequence[1:])
 
 
-def compileCondition(condition: [AST_Node], var_dict, function_name, loop_count) -> str:
-    return ""
+def compileCondition(condition: [AST_Node], var_dict, funcvar_dict, function_name, loop_count) -> str:
+
+    return "condition\n"
 
 
-def compileLoop(loop_node: AST_Loop, var_dict, function_name, loop_count) -> (str, int):
+def compileLoop(ast_main, loop_node: AST_Loop, var_dict, funcvar_dict, function_name, loop_count) -> (str, int):
+    var_dict_copy = var_dict
+    funcvar_dict_copy = funcvar_dict
     loop_string = ""
     #start label
-    loop_string += ".{}_{}:\n".format(function_name, loop_count)
+    loop_string += "\n.{}_{}:\n".format(function_name, loop_count)
 
     #evaluate condition
-    loop_string += compileCondition(simplifyNode(loop_node.condition), var_dict, function_name, loop_count+1)
+    loop_string += compileCondition(simplifyNode(loop_node.condition), var_dict_copy, funcvar_dict_copy, function_name, loop_count+1)
 
     #compile codeblock
-    codeblock_string, count = compileCodeBlock(loop_node.CodeSequence, var_dict, function_name, loop_count+2)
+    codeblock_string, count = compileCodeBlock(ast_main, loop_node.CodeSequence, var_dict_copy, funcvar_dict_copy, function_name, loop_count+2)
     loop_string += codeblock_string
 
     #label for rest, to continue
-    loop_string += ".{}_{}:\n".format(function_name, loop_count+1)
+    loop_string += "\n.{}_{}:\n".format(function_name, loop_count+1)
     return loop_string, loop_count + 2 + count
 
 
-def compileIf(if_node: AST_Loop, var_dict, function_name, loop_count) -> (str, int):
+def compileIf(ast_main, if_node: AST_Loop, var_dict, reg_list, funcvar_dict, function_name, loop_count) -> (str, int):
     loop_string = ""
+    var_dict_copy = var_dict
+    funcvar_dict_copy = funcvar_dict
     # evaluate condition
-    loop_string += compileCondition(simplifyNode(if_node.condition), var_dict, function_name, loop_count)
+    loop_string += compileCondition(simplifyNode(if_node.condition), var_dict_copy, funcvar_dict_copy, function_name, loop_count)
 
     # compile codeblock
-    codeblock_string, count = compileCodeBlock(if_node.CodeSequence, var_dict, function_name, loop_count + 1)
+    codeblock_string = compileCodeBlock(ast_main, if_node.CodeSequence, var_dict_copy, reg_list, funcvar_dict_copy, function_name, loop_count + 1)
     loop_string += codeblock_string
 
     # label for rest, to continue
-    loop_string += ".{}_{}:\n".format(function_name, loop_count)
-    return loop_string, loop_count + 1 + count
+    loop_string += "\n.{}_{}:\n".format(function_name, loop_count)
+    return loop_string, loop_count + 1
 
 
-def compileCalculation(node, var_dict, reg_list, reg=0):
+def compileCalculation(ast_main, node, var_dict, reg_list, funcvar_dict, reg=0):
+    calc_string = ""
+
     if isinstance(node, AST_RelationalOperators):
         reg_1 = getFreeReg(reg_list)
         reg_list[reg_1] = True
         reg_2 = getFreeReg(reg_list)
         reg_list[reg_2] = True
-        left_str = compileCalculation(node.left, var_dict, reg_list, reg_1)
-        right_str = compileCalculation(node.right, var_dict, reg_list, reg_2)
-        comp_string = ""
-        comp_string += "push    {r0, r1}\n"
-        comp_string += "mov     r0, r{}\n".format(reg_1)
-        comp_string += "mov     r1, r{}\n".format(reg_2)
-        comp_string += "bl      {}\n".format(comparator_subroutine_dict[node.operator])
-        comp_string += "mov     r0, r{}\n".format(reg_1)
-        comp_string += "pop     {r0, r1}\n"
-        comp_string += "mov     r{}, r{}\n".format(reg_1, reg)
+        calc_string += compileCalculation(ast_main, node.left, var_dict, reg_list, funcvar_dict, reg_1)
+        calc_string += compileCalculation(ast_main, node.right, var_dict, reg_list, funcvar_dict, reg_2)
+        calc_string += "push    {r0, r1}\n"
+        calc_string += "mov     r0, r{}\n".format(reg_1)
+        calc_string += "mov     r1, r{}\n".format(reg_2)
+        calc_string += "bl      {}\n".format(comparator_subroutine_dict[node.operator])
+        calc_string += "mov     r0, r{}\n".format(reg_1)
+        calc_string += "pop     {r0, r1}\n"
+        calc_string += "mov     r{}, r{}\n".format(reg_1, reg)
         reg_list[reg_1] = False
         reg_list[reg_2] = False
     elif isinstance(node, AST_Operator):
-        if isinstance(node.)
-        return formatCodeLine(node.operator, reg, val_1, val_2)
+        #do left first
+        reg_1 = -1
+        reg_2 = -1
+        if isinstance(node.left, AST_Literal):
+            val_1 = "#{}".format(node.left.value)
+        elif isinstance(node.left, AST_VariableReference):
+            reg_1 = getFreeReg(reg_list)
+            reg_list[reg_1] = True
+            calc_string += "ldr     r{}, [r7, #{}]\n".format(reg_1, var_dict[node.left.name])
+            val_1 = "r{}".format(reg_1)
+        elif isinstance(node.left, AST_FunctionCallExecution):
+            reg_1 = getFreeReg(reg_list)
+            reg_list[reg_1] = True
+            calc_string += compileCalculation(ast_main, node.left, var_dict, reg_list, funcvar_dict, reg_2)
+            val_1 = "r{}".format(reg_1)
+        elif isinstance(node.left, AST_Operator):
+            reg_1 = reg
+            calc_string += compileCalculation(ast_main, node.left, var_dict, reg_list, funcvar_dict, reg_1)
+            val_1 = "r{}".format(reg_1)
 
-def startCalculation
+        if isinstance(node.right, AST_Literal):
+            val_2 = "#{}".format(node.left.value)
+        elif isinstance(node.right, AST_VariableReference):
+            reg_2 = getFreeReg(reg_list)
+            reg_list[reg_2] = True
+            calc_string += "ldr     r{}, [r7, #{}]\n".format(reg_2, var_dict[node.right.name])
+            val_2 = "r{}".format(reg_2)
+        elif isinstance(node.right, AST_FunctionCallExecution):
+            reg_2 = getFreeReg(reg_list)
+            reg_list[reg_2] = True
+            calc_string += compileCalculation(ast_main, node.right, var_dict, reg_list, funcvar_dict, reg_2)
+            val_2 = "r{}".format(reg_2)
+        elif isinstance(node.right, AST_Operator):
+            if reg_1 == reg:
+                reg_2 = getFreeReg(reg_list)
+                reg_list[reg_2] = True
+            else:
+                reg_2 = reg
+            calc_string += compileCalculation(ast_main, node.right, var_dict, reg_list, funcvar_dict, reg_2)
+            val_2 = "r{}".format(reg_2)
+
+        calc_string += formatCodeLine(node.operator, reg, val_1, val_2)
+
+        if reg_1 >= 0 and reg_1 != reg:
+            var_dict[reg_1] = False
+
+        if reg_2 >= 0 and reg_2 != reg:
+            var_dict[reg_2] = False
 
 
-def compileAssignment(node, var_dict, reg_list) -> (str, dict, list):
-    index = len(var_dict)-1
-    if node.left.name not in var_dict:
-        var_dict[node.left.name] = index * 4
+    elif isinstance(node, AST_VariableReference):
+        calc_string += "ldr     r{}, [r7, #{}]\n".format(reg, var_dict[node.name])
 
-    # calculate_right to assign to left
+    elif isinstance(node, AST_Literal):
+        calc_string += "ldr     r{}, #{}\n".format(reg, int(node.value))
+    elif isinstance(node, AST_FunctionCallExecution):
+        put_reg = getFreeReg(reg_list[4:])+4
+        reg_list[reg] = True
+
+        calc_string += "push    {r0, r1, r2, r3}\n"
+        calc_string += load_arguments_for_call(ast_main, node, var_dict, funcvar_dict)
+        calc_string += "bl      {}()\n".format(funcvar_dict[node.name])
+        calc_string += "mov     r0, r{}\n".format(put_reg)
+        calc_string += "pop     {r0, r1, r2, r3}\n"
+        calc_string += "mov     r{}, r{}\n".format(put_reg, reg)
+
+        reg_list[reg] = False
+
+    return calc_string
+
+
+count = [0]
+def store_function_arguments(ast_main, args, var_dict, reg_list, funcvar_dict, location, index = 0):
+    if len(args.argument_nodes) == index:
+        return ""
     reg = getFreeReg(reg_list)
     reg_list[reg] = True
-
-    assign_string = compileCalculation()
-
-    assign_string += "str     r{}, [r7, #{}]\n".format(reg, var_dict[node.left.name])
+    string = compileCalculation(ast_main, args.argument_nodes[index], var_dict, reg_list, funcvar_dict, reg)
+    string += "str     r{}, [r7, #{}]\n".format(reg, location + index*4)
     reg_list[reg] = False
-    return assign_string, var_dict, reg_list
+    string += store_function_arguments(ast_main, args, var_dict, reg_list, funcvar_dict, location, index+1)
+    return string
+
+def load_arguments_for_call(ast_main, node, var_dict, funcvar_dict, index=0):
+    if len(ast_main.Functions[funcvar_dict[node.name]].argumentList) == index:
+        return ""
+    string = "ldr     r{}, [r7, #{}]\n".format(index, var_dict[node.name] + 4*index)
+    return string + load_arguments_for_call(ast_main, node, var_dict, funcvar_dict, index+1)
+
+
+
+def compileAssignment(ast_main, node, var_dict, reg_list, funcvar_dict) -> (str, dict, list):
+    index = len(var_dict)-1
+    size = 1
+
+    if isinstance(node.left, (AST_Variable)):
+        if node.left.type == type_dict["string"]:
+            throw_error_runtime("StringsCompile", node.left.name)
+
+    if isinstance(node.left, AST_FunctionVariable):
+        size = len(ast_main.Functions[node.left.FunctionName].argumentList)
+    if node.left.name not in var_dict:
+        var_dict[node.left.name] = (var_dict['size'] + (size*4))
+        var_dict['size'] = var_dict['size'] + (size*4)
+
+    # calculate_right to assign to left
+
+    if isinstance(node.left, AST_FunctionVariable):
+        assign_string = store_function_arguments(ast_main, node.right, var_dict, reg_list, funcvar_dict, var_dict[node.left.name], 0)
+        funcvar_dict[node.left.name] = node.left.FunctionName
+    else:
+        reg = getFreeReg(reg_list)
+        reg_list[reg] = True
+        assign_string = compileCalculation(ast_main, simplifyNode(node.right), var_dict, reg_list, funcvar_dict, reg)
+        assign_string += "str     r{}, [r7, #{}]\n".format(reg, var_dict[node.left.name])
+        reg_list[reg] = False
+
+    return assign_string, var_dict, reg_list, funcvar_dict
 
 
 def storeParameters(argumentlist, adress, index=0) -> (str, dict):
@@ -276,38 +385,73 @@ def storeParameters(argumentlist, adress, index=0) -> (str, dict):
         store_str = "str     r{}, [r7, #{}]\n".format(index, adress)
         string, var_dict = storeParameters(argumentlist[1:], adress+4, index)
         var_dict[argumentlist[0].name] = index*4
+        var_dict['size'] = var_dict['size'] + index*4
         return store_str + string, var_dict
     else:
-        return "", {}
+        var_dict = {}
+        var_dict['size'] = 0
+        return "", var_dict
+
+def compileReturn(ast_main, node: AST_ReturnStatement, var_dict, reg_list, funcvar_dict, function_name):
+    calc = compileCalculation(ast_main, simplifyNode(node.value), var_dict, reg_list, funcvar_dict, 0)
+    calc += "B       .__{}_return:\n".format(function_name)
+    return calc
 
 
 
 
-def compileCodeBlock(code_sequence: [AST_Node], var_dict, reg_list, function_name, loop_count = 0) -> str:
+def compileCodeBlock(ast_main, code_sequence: [AST_Node], var_dict, reg_list, funcvar_dict, function_name, loop_count = 0) -> str:
+    if len(code_sequence) == 0:
+        return ""
+    else:
         if isinstance(code_sequence[0], AST_AssignmentOperator):
-            val = compileAssignment()
+            assign_string, var_dict, reg_list, funcvar_dict = compileAssignment(ast_main, code_sequence[0], var_dict, reg_list, funcvar_dict)
+            return assign_string + compileCodeBlock(ast_main, code_sequence[1:], var_dict, reg_list, funcvar_dict, function_name, loop_count)
+
         elif isinstance(code_sequence[0], AST_Loop):
-            string, count = compileLoop(code_sequence[0], var_dict, function_name, loop_count)
-            return string + compileCodeBlock(code_sequence[1:], var_dict, function_name, count)
+            string, count = compileLoop(ast_main, code_sequence[0], var_dict, funcvar_dict, function_name, loop_count)
+            return string + compileCodeBlock(ast_main, code_sequence[1:], var_dict, reg_list, funcvar_dict, function_name, count)
+
         elif isinstance(code_sequence[0], AST_IfStatement):
-            string, count = compileIf(code_sequence[0], var_dict, function_name, loop_count)
-            return string + compileCodeBlock(code_sequence[1:], var_dict, function_name, count)
+            string, count = compileIf(ast_main, code_sequence[0], var_dict, reg_list, funcvar_dict, function_name, loop_count)
+            return string + compileCodeBlock(ast_main, code_sequence[1:], var_dict, reg_list, funcvar_dict, function_name, count)
+
         elif isinstance(code_sequence[0], AST_ReturnStatement):
-            pass
-        elif isinstance(code_sequence[0], AST_PrintFunctionCall):
-            pass
+            string = compileReturn(ast_main, code_sequence[0], var_dict, reg_list, funcvar_dict, function_name)
+            return string + compileCodeBlock(ast_main,code_sequence[1:], var_dict, reg_list, funcvar_dict, function_name, loop_count)
+
+        elif isinstance(code_sequence[0], AST_FunctionCallExecution):
+            if isinstance(code_sequence[0], AST_PrintFunctionCall):
+                string = load_arguments_for_call(ast_main, code_sequence[0], var_dict, funcvar_dict)
+                string += "bl      {}()\n".format(funcvar_dict[code_sequence[0].name])
+                return string + compileCodeBlock(ast_main, code_sequence[1:], var_dict, reg_list, funcvar_dict, function_name, loop_count)
+            else:
+                return compileCodeBlock(ast_main, code_sequence[1:], var_dict, reg_list, funcvar_dict, function_name, loop_count)
+        else:
+            return compileCodeBlock(ast_main, code_sequence[1:], var_dict, reg_list, funcvar_dict, function_name, loop_count)
 
 
 #todo if it turns out there are more than 4 parameters, they need to be fetched from the stack, and when calling another function with more then 4 parameters they need to be put on the stack!
-def compileFunction(func: AST_Function):
-    var_count: int = count_variables(func.CodeSequence)
+def compileFunction(ast_main, func: AST_Function):
+    var_count: int = count_variables(ast_main, func.CodeSequence)
+    var_count += len(func.argumentList)
     var_value: int = var_count*4 if var_count % 2 == 0 else (var_count+1)*4
     func_string = func.name + "()" +"\n"
-    func_string += "push    {r5, r6, r7, r8, lr}\n"
-    func_string += "pop     {r5, r6, r7, r8, pc}\n"
+    func_string += "push    {r4, r5, r6, r7, r8, r9, r10, r11, lr}\n"
+
     func_string += "sub     sp, sp, #{}\n".format(var_value)
     func_string += "add     r7, sp, #0\n"
     store_string, var_dict = storeParameters(func.argumentList, var_value)
+    funcvar_dict = {}
     func_string += store_string
-    reg_list = getVariableRegs(len(func.argumentList))
-    code_string = compileCodeBlock(func.CodeSequence, var_dict, reg_list, func.name)
+    reg_list = getVariableRegs(0)
+    func_string += compileCodeBlock(ast_main, func.CodeSequence, var_dict, reg_list, funcvar_dict, func.name)
+    func_string += "\n.__{}_return:\n".format(func.name)
+    func_string += "mov     sp, r7\n"
+    func_string += "add     sp, sp, #{}\n".format(var_value)
+    func_string += "pop     {r4, r5, r6, r7, r8, r9, r10, r11, pc}\n"
+    return func_string
+
+
+def compile(ast_main):
+    print(compileFunction(ast_main, list(ast_main.Functions.values())[0]))

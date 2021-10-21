@@ -1,6 +1,7 @@
 from Parser.Parser import *
 from Lexer.Lexer import *
 from Runner.Runner import *
+from Compiler.Compiler_v2 import *
 import sys
 
 
@@ -107,5 +108,6 @@ print(ast)
 print(100*"=")
 context: [running_context] = [running_context()]
 context = addCommandLineArguments(sys.argv[2:], context)
-executingCodeBlock(ast.CodeSequence, 0, ast, context)
+#executingCodeBlock(ast.CodeSequence, 0, ast, context)
+compile(ast)
 

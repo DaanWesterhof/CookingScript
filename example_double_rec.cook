@@ -20,10 +20,12 @@ recipe even -> egg
     prepare:
         - litre n
     bake:
+        litre b = 5
         weigh(n == 0)
             serve whole
         done
-        odd oddccall = prepare(n-1)
+        b = 5 + 10 / 2
+        odd oddccall = prepare(1)
         serve oddccall.bake()
     done
 

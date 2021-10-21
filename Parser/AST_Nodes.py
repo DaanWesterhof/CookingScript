@@ -134,7 +134,7 @@ class AST_Variable(AST_Node):
         super().__init__("Variable")
         self.name: str = None
         self.value: AST_Node = None
-        self.type: str = "bla"
+        self.type: str = ""
 
     def __str__(self, index: int=0) -> str:
         """ Returns a string version of the object and je subnodes of the object
