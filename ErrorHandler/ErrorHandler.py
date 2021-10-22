@@ -17,7 +17,8 @@ error_dict = {
     "WrongListLength": " Expected list with length of '{}' got length '{}' instead",
     "ArgumentCount": " Expected '{}' arguments got '{}' arguments instead",
     "WrongVariableAssignment": " Expected value of type '{}' for variable '{}' got value of type '{}' instead",
-    "StringsCompile": " Strings are not yet supported in compile mode, found with variable: '{}'"
+    "StringsCompile": " Strings are not yet supported in compile mode, found with variable: '{}'",
+    "CompiledListsStatic": " In compile mode list can only be static, found non static list named {}"
 }
 
 
@@ -62,6 +63,27 @@ def throw_error_runtime(key: str, *args):
         exit()
     else:
         print("[RuntimeError] Unknown Error")
+        exit()
+
+# throw_error_runtime :: str → list → None
+def throw_error_compiletime(key: str, *args):
+    """ Prints an error message to the terminal based on the key: argument. The message is filled with data from the *args argument
+        Excluding the file name and file line as these are not know during compiletime
+        Then exits the program
+
+            Parameters
+            ----------
+            key : str
+                The key for the desired error message
+
+            *args :
+                The list of values to format into the error message
+    """
+    if key in error_dict:
+        print(("[CompileError]" + (error_dict[key])).format(*args))
+        exit()
+    else:
+        print("[CompileError] Unknown Error")
         exit()
 
 
