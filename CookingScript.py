@@ -109,5 +109,5 @@ print(100*"=")
 context: [running_context] = [running_context()]
 context = addCommandLineArguments(sys.argv[2:], context)
 #executingCodeBlock(ast.CodeSequence, 0, ast, context)
-compile(ast)
+compile(ast, "compiled_cook.asm")
 
