@@ -1,18 +1,33 @@
 cookbook "example_double_rec.cook"
 cookbook "example_loopig.cook"
 
-recipe fillListWithCheese -> groceries
+recipe fillListWithCheese -> litre
     prepare:
-        - cheese word
         - groceries list
         - litre length
     bake:
         litre n = 0
-        n = n + 5
-        mix(n < length * 2)
+        mix(n < length)
+            list[n] = n
             n = n + 1
         done
-        serve list
+        serve n
+    done
+
+recipe getCheese -> litre
+    prepare:
+        - groceries list
+        - litre length
+        - litre index
+    bake:
+        litre n = 0
+        weigh( index < length)
+            weigh( index < 0)
+                index = length - index
+            done
+            n = list[index]
+        done
+        serve n
     done
 
 

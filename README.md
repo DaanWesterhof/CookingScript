@@ -1,15 +1,21 @@
 # CookingScript
-The language I made an interperter for is CookingScript. 
+The language I made is CookingScript. 
 CookingScript is a programming language I designed myself. 
 Its a language based on terms from the kitchen. Hence the name: CookingScript.
 
 CookingScript is a turing complete language. As it supports variables, functions, lists, loops and basic operators,
 It has the ability to implement all functionalities brainfuck can as well. 
 And as brainfuck is a turing complete language this means CookingScript is turing complete as well. 
-With a list you can make a list just like brainfucks data list. In a vraibale you can store the index/pointer to te correct location int he list.
+With a list you can make a list just like brainfucks data list. In a variable you can store the index/pointer to te correct location int he list.
 And using list assignments and basic operators you can increase and decrease the value on the location of the pointer.
 Loops can be implemented using variables with an index as well, checking if the value at the index location is 0.
 
+
+##Interpreter VS Compiler
+
+This language has a interperter AND a compiler, but there are some difrences between the execution of the same code.
+Wherever there is a diffrence i will note this below the paragraph to prevent confusion and why some things 
+might not work in the compiler and vise versa
 
 ##Language definition
 
@@ -22,6 +28,8 @@ booleans:   egg         : whole
 strings:    cheese      : "Hello there"
 lists:      groceries   : {1, 2, 3, 4, 5, "boo", broken}
 ```
+
+**The compiler does not support strings, only integers, booleans and lists**
 
 ####Variables
 These types can also be used as variables, by first declaring the type and then the variable name like below:
@@ -48,6 +56,7 @@ Cheese is the CookingScript equivalent of a string. Its stringy cheese.
 ```
 cheese i = "this is a string"
 ```
+**Strings are not supported by the compiler**
 
 #####Groceries
 Groceries are the CookingScript equivalent of lists. These list can be filled with all types and duplicates, they are basically variables that can store multiple values
@@ -64,18 +73,31 @@ cheese y = x[0]
 x[1] = "I"
 //you can access a list using the [] operator 
 ```
+**Strings are not supported by the compiler so they cant be stored in a list**<br>
+**In the compiler version lists can only be initialized with an integer, not an initializer list**
+See below for valid use of lists when compiling instead of interpreting
+```
+groceries i = 100
+//create a list
+
+i[10] = 5
+litre b = i[99[
+
+```
 
 ###Code Blocks
 
 Just like most languages CookingScript has code blocks, these can be in while loops, functions or your main program code.
 There is one important thing all these code blocks have in common. That is that they end with "done".
-If the interpreter encounters the "done" statement it will exit that scope.
+If the interpreter or compiler encounters the "done" statement it will exit that scope.
 
 ####Scopes
 CookingScript is a scoped language. The scope of a function is limited as the function cannot access variables defined outside of the function.
 In the code blocks themselves there is also scoping. Variables created in a while loop cannot be accessed outside of that while loop. 
 And will not be saved when the loop is restarted. But the while loop is able to access variables created outside of the while loop like the Main code block, or the function code block.
 So you can say scopes in this language work a bit like a stack
+
+**Note that the compiler does not support scopes in while loops and if statements, only function scopes are supported**
 
 ####Main code
 The main code is the code that is run on the start of your program, you can put a loop in this or just let it end.
@@ -89,6 +111,7 @@ start:
     taste(val)
 done
 ```
+**Note in the compiled version the main code is not compiled, only the functions and the functions from the included files**
 
 ####Operators
 
@@ -102,6 +125,8 @@ The plus operator supports additions between ints and additions between strings
 i = 1 + 1
 i = "hello " + "world"
 ```
+
+**Strings are not supported in the compiled version so you can use a + operator with those**
 #####Minus operator
 The minus operator only allows substractiosn between ints
 ```
@@ -114,7 +139,7 @@ The multiplication operator allows multiplications of ints and ints and multipla
 i = 2 * 2
 i = 5 * "cheesy string"
 ```
-
+**Strings are not supported in the compiled version so you can use a * operator with those**
 #####Devision operator
 The devision operator only allows divisions of integers and will alwways round to a full number.
 ```
@@ -127,6 +152,7 @@ The equals and does not equal operator allows for comparison between all types.
 egg i = 5 == "hello" //result = broken because they are not equal
 egg j = 6 != broken //result = true because 6 does not equal broken
 ```
+**Strings are not supported in the compiled version so you can use relational operators with those**
 
 The other relational operators only allow comparisons between ints and bools.
 ```
@@ -209,6 +235,10 @@ recipes
 done
 ```
 
+**Note:**
+ In the interperter you pass lists as values to a function. But in the compiler all lists are passed like a pointer, 
+ you cannot return lists in the compiled version. So when passing a list to a function in the compiler you can change the its values but you do not need to return int
+
 ####Function call example:
 Function calls in CookingScript are a bit unconventional. As the first step you have to prepare the ingredients. 
 After they are prepared you can bake it. Baking the ingredients will execute the function. See the example below:
@@ -224,6 +254,8 @@ litre number = fib_call.bake()
 
 ###Build in functions:
 ####Print statement example:
+**Print statements are not supported by the compiler**
+
 ```
 litre i = 10
 taste(i)
@@ -237,6 +269,7 @@ cookbook "example.cook"
 ```
 
 ####Use commandline parameters
+**This is not supported by the compiler**
 You can pass arguments to your program using the commandline.
 ```
 python CookingScript.py main.cook hey i am a commandline passed argumen 1 2 3 broken flase true
@@ -270,6 +303,17 @@ The error message then becomes:
 ```
 Expected '[Runntime Error] Expected value of type 'litre' for variable 'var' got value of type 'egg' instead
 ```
+
+If a error is found while compiling the code, for example:
+```
+litre var = broken
+```
+Then the error will annouce what the problem is.
+The error message then becomes:
+```
+Expected '[CompileError] Expected value of type 'litre' for variable 'var' got value of type 'egg' instead
+```
+
 
 
 ## Interpreter Code
@@ -305,7 +349,19 @@ I have used these higher order funtions in the following locations:
 
 3. [[Parser/AST_Nodes.py]](Parser/AST_Nodes.py) - [702] Here we use reduce() and map() in one code line, this function is used to turn ASt_Nodes into strings, so we can print the AST
 
-#ATP Checklist
+
+## CompilerCode Code
+
+The compiler has been written completeley in functional style, 
+with haskell type-annotation in the comments and Python-Style type-annotations in the function definitions <br>
+
+It makes used off classes to give meaning to the tokens form the lexer so they can easily be parsed into a usable AST.
+The AST is a tree made of nodes. These nodes are all based on the AST_Node base class so they can easily be passed into functions no matter their actual type. Except for the root node (AST_Program).
+By printing the root node of the tree, you can print the entire AST with correct indexing. This gives a good overview of the structure of your program.
+All classes support this printing, even the classes not part of the AST.
+
+
+#ATP Checklist Compiler
 ###Gekozen taal:
 Cooking Script: Zelf ontworpen
 
@@ -317,7 +373,59 @@ Daardoor kan hij alle functionaliteiten van brainfuck implementeren, en is net z
 ###Code is geschreven in functionele stijl.
 Ja mijn code is volledig geschreven in functionele stijl
 
+
+###Taal ondersteunt:
+Mijn taal ondersteund onderandere de minimale onderstaande eisen
+Loops Voorbeeld: [[main.cook]](main.cook) - [11]
+If statements: [[main.cook]](main.cook) - [31]
+
+###Libraries die worden gebruikt:
+- functools
+- typing
+- sys
+- operator
+
+Deze zitten allemaal standaard in python en zouden geen probleem moeten leveren.
+
+###Mij Code Bevat:
+
+**Classes met inheritance**: bijvoorbeeld [[Parser/AST_Nodes.py]](Parser/AST_Nodes.py) - [211]
+
+**Object-printing voor elke class**: [ja]
+
+Type-annotatie: Haskell-stijl in comments: [ja]; Python-stijl in functiedefinities: [ja]
+
+**Compiler-functionaliteit Must-have**:
+
+**Functies**: [meer per file]
+Alle functies van zowel de gecompilde file as geinclude file worden gecompiled naar 1 .asm bestand, en kunnen worden aangeroepen vanuit C
+
+**Functies kunnen andere functies aanroepen**: zie voorbeeld [[example_double_rec.cook]](example_double_rec.cook) - [15]
+
+**Compiler-functionaliteit (should/could-have)**:
+- ErrorHandling (minimaal in compiler)
+- Includes en Meer Functies per file
+- Lijsten
+- Lange en complexe berekeningen
+
+voor meer uitleg zie het laatste hoofdstuk voor elk onderdeel
+
+##Should Haves
+
+
+
+#ATP Checklist Interpreter
+###Gekozen taal:
+Cooking Script: Zelf ontworpen
+
+###Turing-compleet omdat:
+De taal lists, variabelen, loops, integers assignment operators en gewone operators ondersteund.
+Daardoor kan hij alle functionaliteiten van brainfuck implementeren, en is net zoals brainfuck dus turing complete
  
+
+###Code is geschreven in functionele stijl.
+Ja mijn code is volledig geschreven in functionele stijl
+
 
 ###Taal ondersteunt:
 Mijn taal ondersteund onderandere de minimale onderstaande eisen
@@ -378,6 +486,10 @@ Type-annotatie: Haskell-stijl in comments: [ja]; Python-stijl in functiedefiniti
 - CodeBlock Scoping
 - Lijsten
 - Lange en complexe berekeningen
+
+voor meer uitleg zie het laatste hoofdstuk voor elk onderdeel
+
+##Should Haves
 
 ______________________________________
 **ErrorHandling**<br>
