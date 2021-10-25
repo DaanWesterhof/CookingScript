@@ -465,6 +465,9 @@ Make zorgt dan dat main.cook word gecompileerd samen met de unit tests en deze z
 
 In MakeCompile staat een pad aangegeven naar mijn python instalatie. Dit pad moet worden vervangen voor het pad naar de python isntalatie op uw eigen computer
 
+Als de source bestanden zijn aangepast moet het compiled_cook.asm bestand handmatig verwijderdworden. Deze word niet automatisch verwijder of ge hercompileerd, 
+Hou er dus rekening mee dat als deze al bestaat dat hij eerst verwijderd moet worden voordat hij opnieuw word aangemaakt en word hercompileerd door de assembly
+
 #ATP Checklist Interpreter
 ###Gekozen taal:
 Cooking Script: Zelf ontworpen
