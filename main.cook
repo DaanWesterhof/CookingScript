@@ -23,11 +23,13 @@ recipe getCheese -> litre
         litre n = 0
         weigh( index < length)
             weigh( index < 0)
-                index = length - index
+                index = length + index
             done
             n = list[index]
+            serve n
         done
-        serve n
+        serve 0
+
     done
 
 

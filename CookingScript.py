@@ -106,8 +106,11 @@ ast = recursiveParse(tokens, ast)
 print(100*"=")
 print(ast)
 print(100*"=")
-context: [running_context] = [running_context()]
-context = addCommandLineArguments(sys.argv[2:], context)
-#executingCodeBlock(ast.CodeSequence, 0, ast, context)
-compile(ast, "compiled_cook.asm")
+if sys.argv[2] == "compile":
+    compile(ast, "compiled_cook.asm")
+else:
+    context: [running_context] = [running_context()]
+    context = addCommandLineArguments(sys.argv[2:], context)
+    executingCodeBlock(ast.CodeSequence, 0, ast, context)
+
 

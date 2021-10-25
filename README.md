@@ -207,6 +207,7 @@ Functions in CookingScript are a bit different than in other languages. You defi
 Then to set the parameters you starts with a prepare: keyword and add a list of types using a - for each entry.
 The actual code of the statement is defined in the bake: section and behaves like a normal code block. A file can contain as many functions as you like.
 But you can also put functions in other files and Include the file.
+**Note in the compiler functions only support a maximum of 4 function arguments**
 ```
 recipe fib -> litre
     prepare:
@@ -268,8 +269,18 @@ You can include other .cook files using the cookbook statement. This will includ
 cookbook "example.cook"
 ```
 
+####Compiling and Running the programe
+You can pass run the program with the following command in the commandline
+```
+python CookingScript.py main.cook
+```
+To compile the file instead you need to make sure to add the compile argument after the file name
+```
+python CookingScript.py main.cook compile
+```
+
 ####Use commandline parameters
-**This is not supported by the compiler**
+
 You can pass arguments to your program using the commandline.
 ```
 python CookingScript.py main.cook hey i am a commandline passed argumen 1 2 3 broken flase true
@@ -277,7 +288,7 @@ python CookingScript.py main.cook hey i am a commandline passed argumen 1 2 3 br
 These arguments will be available in he program as variables. These are named "$arg" + the number of the argument.
 So "hey" in this call would be "$arg0" in your program.
 To see if there are any arguments avalaible you can check the "$arglen" variable. This variable tells how many arguments have been passed
-
+**This is not supported by the compiler**
 ```
 litre arguments = $arglen
 litre param1 = $arg0
@@ -376,8 +387,9 @@ Ja mijn code is volledig geschreven in functionele stijl
 
 ###Taal ondersteunt:
 Mijn taal ondersteund onderandere de minimale onderstaande eisen
-Loops Voorbeeld: [[main.cook]](main.cook) - [11]
-If statements: [[main.cook]](main.cook) - [31]
+Loops Voorbeeld: [[main.cook]](main.cook) - [10]
+If statements: [[main.cook]](main.cook) - [24]
+Recusrsie: [[example_double_rec.cook]](example_double_rec.cook) - [13]
 
 ###Libraries die worden gebruikt:
 - functools
@@ -410,9 +422,48 @@ Alle functies van zowel de gecompilde file as geinclude file worden gecompiled n
 
 voor meer uitleg zie het laatste hoofdstuk voor elk onderdeel
 
-##Should Haves
+### Verschillen met interperter
+Er zijn bij de compiler wat dingen veranderd dan met de interperter, ik zet ze hier even op een lijstje:
+- Geen support voor strings
+- Lists worden aan een functie meegegeven als pointer en niet als waarden, je past de meegegeven lijst dus aan op zijn oorspornkelijke plek
+- Minder goede error handling in de compiler. Dit had beter geweest als ik meer tijd had gehad
+- Geen print functie. Dit had er wel geweest als ik meer tijd had gehad.
+- Geen lijsten initializeren met initializer list.
+- Geen lijsten returnen
+- Codeblock scoping werkt nu alleen nog op functie niveau niet meer op loop en if niveau
+- Maximaal 4 parameters voor een functie. Door gebrek aan tijd is het niet mogenlijk om meer dan 4 waardes mee te geven aan een functie
 
+###Unit tests
 
+Voor de unit tests heb ik gebruik gemaakt van HWLIB en BMPTK. Om de unit tests dus te kunnen gebruiken dient dit geinstalleerd te zijn.
+Hiervoor kan gebruik gemaakt worden van een handige installer van nicoverduin [InstallWindowsTI](https://github.com/nicoverduin/InstallWindowsTI).
+Het kan zijn dat er een error komt op het downloaded van 2 bestanden, dit kan opgelost worden door de laatste 2 items uit het lijstje "compilers" te halen.
+
+De unit tests staan beschreven in [[main.cpp]](main.cpp). Alle functies worden hier getest met verschillende soorten input.
+De compiler van cookingscript word in het MakeCompile bestand aangeroepen. Dit bestand word gebruikt door de makefile om compiled_cook.asm te verkrijgen.
+
+Om het te laten werken moet de folder structuur als volgt zijn:
+```
+TI-Folder
+- HWLIB
+- BMPTK
+- ATP
+    - CookingScript
+        - main.cpp
+        - Makefile
+        - MakeCompile
+        - etc
+    - Makefile.due
+    - Makefile.link
+    - Makefile.native
+    - etc
+- etc
+```
+Configureer in Makefile op welke com poort (usb poort) de arduino due zit aangesloten ```SERIAL_PORT := COM3```.
+Om de unit tests dan uit te voeren open je de CookingScript folder in de terminal en roep je ```make run``` aan.
+Make zorgt dan dat main.cook word gecompileerd samen met de unit tests en deze zullen hun resultaat naar de terminal printen.
+
+In MakeCompile staat een pad aangegeven naar mijn python instalatie. Dit pad moet worden vervangen voor het pad naar de python isntalatie op uw eigen computer
 
 #ATP Checklist Interpreter
 ###Gekozen taal:

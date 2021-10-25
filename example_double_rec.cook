@@ -9,6 +9,10 @@ recipe odd -> egg
     prepare:
         - litre n
     bake:
+        weigh(n < 0)
+            odd odcall = prepare(0 - n)
+            serve odcall.bake()
+        done
         weigh(n == 0)
             serve broken
         done
@@ -20,6 +24,10 @@ recipe even -> egg
     prepare:
         - litre n
     bake:
+        weigh(n < 0)
+            even evcall = prepare(0 - n)
+            serve evcall.bake()
+        done
         weigh(n == 0)
             serve whole
         done

@@ -203,8 +203,8 @@ def getVariableRegs(amount: int, index: int=0) -> List[bool]:
     else:
         return [False] + getVariableRegs(amount, index + 1)
 
-# formatCodeLine :: str → int → str → str → str
-def formatCodeLine(operator: str, start_reg: int, value: str, value2: str="") -> str:
+# formatCodeLine :: str → int → List[bool] → str → str → str
+def formatCodeLine(operator: str, start_reg: int, reg_list: List[bool], value: str, value2: str="") -> str:
     """ This function returns a string of a formatted assembly calculation eg "a + b"
 
         Parameters
@@ -230,14 +230,25 @@ def formatCodeLine(operator: str, start_reg: int, value: str, value2: str="") ->
     if value2 == "":
         value2 = "r{}".format(start_reg)
     str_this = ""
+    freereg = getFreeReg(reg_list)
+    reg_list[freereg] = True
     if operator == '+':
         if value2[0] == "#":
-            str_this += "    movs    r{}, {}\n".format(start_reg, value2)
-            value_2 = "r{}".format(start_reg)
+
+            str_this += "    movs    r{}, {}\n".format(freereg, value2)
+            value_2 = "r{}".format(freereg)
+        if value[0] == "#":
+            str_this += "    movs    r{}, {}\n".format(freereg, value)
+            value = "r{}".format(freereg)
         str_this +=  "    add     r{}, {}, {}\n".format(start_reg, value, value2)
     elif operator == '-':
-
-        str_this =  "    sub     r{}, {}, {}\n".format(start_reg, value, value2)
+        if value2[0] == "#":
+            str_this += "    movs    r{}, {}\n".format(freereg, value2)
+            value_2 = "r{}".format(freereg)
+        if value[0] == "#":
+            str_this += "    movs    r{}, {}\n".format(freereg, value)
+            value = "r{}".format(freereg)
+        str_this +=  "    sub     r{}, {}, {}\n".format(start_reg, value, value2)
     elif operator == '/':
         str_this += "    push    {r4, r5, r6, r7}\n"
         str_this += "    push    {r0, r1, r2, r3}\n"
@@ -257,9 +268,13 @@ def formatCodeLine(operator: str, start_reg: int, value: str, value2: str="") ->
         str_this += "    pop     {r4, r5, r6, r7}\n"
     elif operator == '*':
         if value2[0] == "#":
-            str_this += "    movs    r{}, {}\n".format(start_reg, value2)
-            value2 = "r{}".format(start_reg)
+            str_this += "    movs    r{}, {}\n".format(freereg, value2)
+            value2 = "r{}".format(freereg)
+        if value[0] == "#":
+            str_this += "    movs    r{}, {}\n".format(freereg, value)
+            value = "r{}".format(freereg)
         str_this += "    mul     r{}, {}, {}\n".format(start_reg, value, value2)
+    reg_list[freereg] = False
     return str_this
 
 
@@ -326,8 +341,8 @@ def count_variables(ast_main: AST_Program, code_sequence: List[AST_Node]) -> int
     return count_variables(ast_main, code_sequence[1:])
 
 
-# compileCondition :: AST_Program →  AST_Node →  Dict[int] →  List[bool] →  Dict[str] →  str →  int →  str
-def compileCondition(ast_main: AST_Program, condition: AST_Node, var_dict: Dict[int], reg_list: List[bool], funcvar_dict: Dict[str], function_name: str, loop_count: int) -> str:
+# compileCondition :: AST_Program →  AST_Node →  Dict[str, int] →  List[bool] →  Dict[str, str] →  str →  int →  str
+def compileCondition(ast_main: AST_Program, condition: AST_Node, var_dict: Dict[str, int], reg_list: List[bool], funcvar_dict: Dict[str, str], function_name: str, loop_count: int) -> str:
     """ This function compiles a condition for a branch for a loop or if
 
         Parameters
@@ -338,7 +353,7 @@ def compileCondition(ast_main: AST_Program, condition: AST_Node, var_dict: Dict[
         condition : AST_Node
             The condition to be compiled
 
-        var_dict : Dict[int]
+        var_dict : Dict[str, int]
             A dictionairy with the index values of a variable on the stack
 
         reg_list : List[Bool]
@@ -380,8 +395,8 @@ def compileCondition(ast_main: AST_Program, condition: AST_Node, var_dict: Dict[
     return comp_str
 
 
-# compileLoop :: AST_Program →  AST_Loop →  Dict[int] →  List[bool] →  Dict[str] →  str →  int →  (str, str, int)
-def compileLoop(ast_main: AST_Program, loop_node: AST_Loop, var_dict: Dict[int], reg_list: List[bool], funcvar_dict: Dict[str], function_name: str, loop_count: int) -> (str, str, int):
+# compileLoop :: AST_Program →  AST_Loop →  Dict[str, int] →  List[bool] →  Dict[str, str] →  str →  int →  (str, str, int)
+def compileLoop(ast_main: AST_Program, loop_node: AST_Loop, var_dict: Dict[str, int], reg_list: List[bool], funcvar_dict: Dict[str, str], function_name: str, loop_count: int) -> (str, str, int):
     """ This function compiles a loop
         Parameters
         ----------
@@ -391,7 +406,7 @@ def compileLoop(ast_main: AST_Program, loop_node: AST_Loop, var_dict: Dict[int],
         loop_node : AST_Loop
             The node of the loop to be compiled
 
-        var_dict : Dict[int]
+        var_dict : Dict[str, int]
             A dictionairy with the index values of a variable on the stack
 
         reg_list : List[Bool]
@@ -429,8 +444,8 @@ def compileLoop(ast_main: AST_Program, loop_node: AST_Loop, var_dict: Dict[int],
     loop_string += "\n.{}_{}:\n".format(function_name, loop_count+1)
     return loop_string, label_string, count
 
-# compileIf :: AST_Program →  AST_IfStatement →  Dict[int] →  List[bool] →  Dict[str] →  str →  int →  (str, str, int)
-def compileIf(ast_main: AST_Program, if_node: AST_IfStatement, var_dict: Dict[int], reg_list: List[bool], funcvar_dict: Dict[str], function_name: str, loop_count: str) -> (str, str, int):
+# compileIf :: AST_Program →  AST_IfStatement →  Dict[str, int] →  List[bool] →  Dict[str, str] →  str →  int →  (str, str, int)
+def compileIf(ast_main: AST_Program, if_node: AST_IfStatement, var_dict: Dict[str, int], reg_list: List[bool], funcvar_dict: Dict[str, str], function_name: str, loop_count: str) -> (str, str, int):
     """ This function compiles a if statement
 
         Parameters
@@ -441,7 +456,7 @@ def compileIf(ast_main: AST_Program, if_node: AST_IfStatement, var_dict: Dict[in
         if_node : AST_IfStatement
             The node of the loop to be compiled
 
-        var_dict : Dict[int]
+        var_dict : Dict[str, int]
             A dictionairy with the index values of a variable on the stack
 
         reg_list : List[Bool]
@@ -510,8 +525,8 @@ def load_reg_with_val(reg: int, val: int, index: int=0) -> str:
             return string
 
 
-# compileCalculation :: AST_Program →  AST_Node →  Dict[int] →  List[bool] →  Dict[str] →  str →  int →  str
-def compileCalculation(ast_main: AST_Program, node: AST_Node, var_dict: Dict[int], reg_list: List[bool], funcvar_dict: Dict[str], function_name: str, reg: int=0) -> str:
+# compileCalculation :: AST_Program →  AST_Node →  Dict[str, int] →  List[bool] →  Dict[str, str] →  str →  int →  str
+def compileCalculation(ast_main: AST_Program, node: AST_Node, var_dict: Dict[str, int], reg_list: List[bool], funcvar_dict: Dict[str, str], function_name: str, reg: int=0) -> str:
     """ This function compiles a calculation code line
 
         Parameters
@@ -522,7 +537,7 @@ def compileCalculation(ast_main: AST_Program, node: AST_Node, var_dict: Dict[int
         node : AST_Node
             The node that should be compiled
 
-        var_dict : Dict[int]
+        var_dict : Dict[str, int]
             A dictionairy with the index values of a variable on the stack
 
         reg_list : List[Bool]
@@ -620,7 +635,7 @@ def compileCalculation(ast_main: AST_Program, node: AST_Node, var_dict: Dict[int
             calc_string += compileCalculation(ast_main, node.right, var_dict, reg_list, funcvar_dict, function_name, reg_2)
             val_2 = "r{}".format(reg_2)
 
-        calc_string += formatCodeLine(node.operator, reg, val_1, val_2)
+        calc_string += formatCodeLine(node.operator, reg, reg_list, val_1, val_2)
 
         if reg_1 >= 0 and reg_1 != reg:
             var_dict[reg_1] = False
@@ -694,8 +709,8 @@ def compileCalculation(ast_main: AST_Program, node: AST_Node, var_dict: Dict[int
     return calc_string
 
 
-# store_function_arguments :: AST_Program → AST_Node → Dict[int] → List[bool] → Dict[str] → int → str → int → (str, Dict[int])
-def store_function_arguments(ast_main: AST_Program, args: AST_ArgumentList, var_dict: Dict[int], reg_list: List[bool], funcvar_dict: Dict[str], location: int, function_name: str, index: int=0) -> (str, Dict[int]):
+# store_function_arguments :: AST_Program → AST_Node → Dict[str, int] → List[bool] → Dict[str, str] → int → str → int → (str, Dict[str, int])
+def store_function_arguments(ast_main: AST_Program, args: AST_ArgumentList, var_dict: Dict[str, int], reg_list: List[bool], funcvar_dict: Dict[str, str], location: int, function_name: str, index: int=0) -> (str, Dict[str, int]):
     """ This function compiles code for storing values used in prepare for an functioncall
 
         Parameters
@@ -706,7 +721,7 @@ def store_function_arguments(ast_main: AST_Program, args: AST_ArgumentList, var_
         args : AST_ArgumentList
             The argumentlist that tells how many arguments are to be passed to the function
 
-        var_dict : Dict[int]
+        var_dict : Dict[str, int]
             A dictionairy with the index values of a variable on the stack
 
         reg_list : List[Bool]
@@ -729,7 +744,7 @@ def store_function_arguments(ast_main: AST_Program, args: AST_ArgumentList, var_
         String
             A string containing the assembly for stroring the arguments
 
-        Dict[Int]
+        Dict[str, int]
             A dictionairy that contains the locations of each variable on the stack
     """
 
@@ -744,8 +759,8 @@ def store_function_arguments(ast_main: AST_Program, args: AST_ArgumentList, var_
     return string
 
 
-# load_arguments_for_call :: AST_Program → AST_Node → Dict[int] → Dict[str] → int → str
-def load_arguments_for_call(ast_main: AST_Program, node: AST_Node, var_dict: Dict[int], funcvar_dict: Dict[str], index: int=0) -> str:
+# load_arguments_for_call :: AST_Program → AST_Node → Dict[str, int] → Dict[str, str] → int → str
+def load_arguments_for_call(ast_main: AST_Program, node: AST_Node, var_dict: Dict[str, int], funcvar_dict: Dict[str, str], index: int=0) -> str:
     """ This function compiles code for loading values stored in a function variable for a function call
 
         Parameters
@@ -756,7 +771,7 @@ def load_arguments_for_call(ast_main: AST_Program, node: AST_Node, var_dict: Dic
         node : AST_Node
             The node that should be compiled
 
-        var_dict : Dict[int]
+        var_dict : Dict[str, int]
             A dictionairy with the index values of a variable on the stack
 
 
@@ -798,8 +813,8 @@ def get_var_names(func: AST_Function, index=0) -> [str]:
         return [func.argumentList[index].name] + get_var_names(func, index +1)
 
 
-# compileAssignment :: AST_Program → AST_AssignmentOperator → Dict[int] → List[bool] → Dict[str] → str → (str, str, Dict[Int], List[Bool], Dict[String])
-def compileAssignment(ast_main: AST_Program, node: AST_AssignmentOperator, var_dict: Dict[int], reg_list: List[bool], funcvar_dict: Dict[str], function_name: str) -> (str, str, Dict[int], List[bool], Dict[str]):
+# compileAssignment :: AST_Program → AST_AssignmentOperator → Dict[str, int] → List[bool] → Dict[str, str] → str → (str, str, Dict[str, int], List[Bool], Dict[String])
+def compileAssignment(ast_main: AST_Program, node: AST_AssignmentOperator, var_dict: Dict[str, int], reg_list: List[bool], funcvar_dict: Dict[str, str], function_name: str) -> (str, str, Dict[str, int], List[bool], Dict[str, str]):
     """ This function compiles a calculation code line
 
         Parameters
@@ -810,7 +825,7 @@ def compileAssignment(ast_main: AST_Program, node: AST_AssignmentOperator, var_d
         node : AST_AssignmentOperator
             A node that resembles a variable assignment
 
-        var_dict : Dict[int]
+        var_dict : Dict[str, int]
             A dictionairy with the index values of a variable on the stack
 
         reg_list : List[Bool]
@@ -828,7 +843,7 @@ def compileAssignment(ast_main: AST_Program, node: AST_AssignmentOperator, var_d
             A string that contains the assembly for the assignment
         String
             A string containing possible assembly labels that need to be created
-        Dict[Int]
+        Dict[str, int]
             A dictionary containing the locations of variables on the stack
         List[Bool]
             A list of booleans representing registers
@@ -930,7 +945,7 @@ def compileAssignment(ast_main: AST_Program, node: AST_AssignmentOperator, var_d
 
     return assign_string, label_string, var_dict, reg_list, funcvar_dict
 
-# storeParameters ::  List[AST_FunctionArgument] → int → int → (str, Dict[int])
+# storeParameters ::  List[AST_FunctionArgument] → int → int → (str, Dict[str, int])
 def storeParameters(argumentlist: List[AST_FunctionArgument], adress: int, index: int=0) -> (str, dict):
     """ This function compiles code for storing parameters of a function
 
@@ -950,7 +965,7 @@ def storeParameters(argumentlist: List[AST_FunctionArgument], adress: int, index
         String
             A string containing the assembly for stroring the arguments
 
-        Dict[Int]
+        Dict[str, int]
             A dictionairy that contains the locations of each variable on the stack
     """
     if len(argumentlist) > 0:
@@ -965,8 +980,8 @@ def storeParameters(argumentlist: List[AST_FunctionArgument], adress: int, index
         return "", var_dict
 
 
-# compileReturn :: AST_Program → AST_ReturnStatement → Dict[int] → List[bool] → Dict[str] → str → str
-def compileReturn(ast_main: AST_Program, node: AST_ReturnStatement, var_dict: Dict[int], reg_list: List[bool], funcvar_dict: Dict[str], function_name: str) -> str:
+# compileReturn :: AST_Program → AST_ReturnStatement → Dict[str, int] → List[bool] → Dict[str, str] → str → str
+def compileReturn(ast_main: AST_Program, node: AST_ReturnStatement, var_dict: Dict[str, int], reg_list: List[bool], funcvar_dict: Dict[str, str], function_name: str) -> str:
     """ This function compiles a return statement
 
         Parameters
@@ -977,7 +992,7 @@ def compileReturn(ast_main: AST_Program, node: AST_ReturnStatement, var_dict: Di
         node : AST_AssignmentOperator
             A node that resembles a variable assignment
 
-        var_dict : Dict[int]
+        var_dict : Dict[str, int]
             A dictionairy with the index values of a variable on the stack
 
         reg_list : List[Bool]
@@ -1000,8 +1015,8 @@ def compileReturn(ast_main: AST_Program, node: AST_ReturnStatement, var_dict: Di
 
 
 
-# compileCodeBlock :: AST_Program → List[AST_Node] → Dict[int] → List[bool] → Dict[str] → str → int → (str → str → int)
-def compileCodeBlock(ast_main: AST_Program, code_sequence: List[AST_Node], var_dict: Dict[int], reg_list: List[bool], funcvar_dict: Dict[str], function_name: str, loop_count: int=0) -> (str, str, int):
+# compileCodeBlock :: AST_Program → List[AST_Node] → Dict[str, int] → List[bool] → Dict[str, str] → str → int → (str → str → int)
+def compileCodeBlock(ast_main: AST_Program, code_sequence: List[AST_Node], var_dict: Dict[str, int], reg_list: List[bool], funcvar_dict: Dict[str, str], function_name: str, loop_count: int=0) -> (str, str, int):
     """ This function compiles a CodeBlock
 
         Parameters
@@ -1012,7 +1027,7 @@ def compileCodeBlock(ast_main: AST_Program, code_sequence: List[AST_Node], var_d
         code_sequence : List[AST_Node]
             A node that resembles a variable assignment
 
-        var_dict : Dict[int]
+        var_dict : Dict[str, int]
             A dictionairy with the index values of a variable on the stack
 
         reg_list : List[Bool]
